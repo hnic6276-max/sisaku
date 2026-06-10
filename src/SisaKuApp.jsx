@@ -91,6 +91,8 @@ const GLOBAL_CSS = `
   }
   .sk-noscroll::-webkit-scrollbar { display: none; }
   .sk-noscroll { -ms-overflow-style: none; scrollbar-width: none; }
+  .sk-safe-top { padding-top: env(safe-area-inset-top, 0px); }
+  .sk-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .sk-press { transition: transform 0.22s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease; }
   .sk-press:active { transform: scale(0.96); opacity: 0.85; }
   .sk-card { transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), box-shadow 0.3s ease; }
@@ -165,9 +167,75 @@ const BAGS = [
     geo: [-6.1957, 106.8323],
     revs: [ { n: 'Olivia M.', s: 5, t: 'Red velvet + doughnuts for 52k. Instagram-worthy and cheap.' }, { n: 'Farhan D.', s: 5, t: 'Premium desserts at half price, what is not to love.' } ],
   },
+  {
+    id: 7, merchant: 'Eric Kayser', type: 'French Boulangerie', emoji: '\u{1F950}',
+    hue1: '#ecd4ad', hue2: '#c79a5b', original: 110000, price: 42000, discount: 62,
+    category: 'Bakery', distance: 0.9, rating: 4.8, reviews: 241, lat: 22, lng: 54,
+    windowLabel: '7:00 – 9:00 PM', pickupEnd: 21, left: 5, area: 'PIK',
+    contents: 'Levain breads, viennoiserie & a savoury tart from the day\u2019s bake',
+    dietary: ['Vegetarian'],
+    blurb: 'Maison Kayser\u2019s Jakarta outpost — naturally leavened breads and proper croissants.',
+    geo: [-6.1089, 106.7385],
+    revs: [ { n: 'Vincent L.', s: 5, t: 'Two baguettes, pain au chocolat and a quiche for 42k. Insane.' }, { n: 'Tiara N.', s: 4, t: 'Bread was fantastic next morning toasted.' } ],
+  },
+  {
+    id: 8, merchant: 'Common Grounds', type: 'Specialty Café', emoji: '\u{1F95B}',
+    hue1: '#d9c5ab', hue2: '#9c7a4f', original: 78000, price: 30000, discount: 62,
+    category: 'Café', distance: 1.8, rating: 4.6, reviews: 198, lat: 50, lng: 30,
+    windowLabel: '5:30 – 7:30 PM', pickupEnd: 19.5, left: 6, area: 'SCBD',
+    contents: 'Sandwiches, cold-pressed juice & a slice of cake',
+    dietary: ['Vegetarian'],
+    blurb: 'A SCBD favourite for flat whites and a tight all-day brunch menu.',
+    geo: [-6.2247, 106.8090],
+    revs: [ { n: 'Reza F.', s: 5, t: 'Sandwich + juice + cake, easily worth triple.' }, { n: 'Aldi S.', s: 4, t: 'Perfect grab on the way home from the office.' } ],
+  },
+  {
+    id: 9, merchant: 'Beau by Talita', type: 'Patisserie & Bakery', emoji: '\u{1F950}',
+    hue1: '#f1d9c4', hue2: '#cb9f6e', original: 128000, price: 48000, discount: 62,
+    category: 'Patisserie', distance: 2.1, rating: 4.9, reviews: 167, lat: 70, lng: 46,
+    windowLabel: '6:00 – 8:00 PM', pickupEnd: 20, left: 2, area: 'Gandaria',
+    contents: 'Croissants, kouign-amann & a patisserie selection by Chef Talita',
+    dietary: ['Vegetarian'],
+    blurb: 'Chef Talita Setyadi\u2019s celebrated bakehouse — precise French technique, local flavour.',
+    geo: [-6.2436, 106.7836],
+    revs: [ { n: 'Gabriella P.', s: 5, t: 'Kouign-amann alone is worth it. Got a whole box for 48k.' }, { n: 'Daniel W.', s: 5, t: 'Best lamination in the city, and half price here.' } ],
+  },
+  {
+    id: 10, merchant: 'Kintan Buffet', type: 'Restaurant', emoji: '\u{1F371}',
+    hue1: '#e3c4a0', hue2: '#b07e4d', original: 150000, price: 55000, discount: 63,
+    category: 'Restaurant', distance: 3.0, rating: 4.5, reviews: 134, lat: 38, lng: 14,
+    windowLabel: '9:00 – 10:00 PM', pickupEnd: 22, left: 4, area: 'Kelapa Gading',
+    contents: 'End-of-service bento of grilled meats, rice & sides',
+    dietary: [],
+    blurb: 'Japanese yakiniku house packing untouched end-of-night portions into hearty bentos.',
+    geo: [-6.1588, 106.9056],
+    revs: [ { n: 'Hendra K.', s: 4, t: 'Huge bento, still warm. Dinner sorted for 55k.' }, { n: 'Sline T.', s: 5, t: 'So much meat. Came back the next night.' } ],
+  },
+  {
+    id: 11, merchant: 'Ranch Market', type: 'Grocery & Deli', emoji: '\u{1F96F}',
+    hue1: '#dcc8a6', hue2: '#a3825a', original: 90000, price: 35000, discount: 61,
+    category: 'Grocery', distance: 1.4, rating: 4.4, reviews: 221, lat: 16, lng: 24,
+    windowLabel: '8:00 – 9:30 PM', pickupEnd: 21.5, left: 9, area: 'PIK',
+    contents: 'A surprise box of bakery items, deli foods & near-date pantry picks',
+    dietary: [],
+    blurb: 'Premium supermarket rescuing its deli counter and in-store bakery before close.',
+    geo: [-6.1102, 106.7402],
+    revs: [ { n: 'Michelle A.', s: 4, t: 'Loaded with deli stuff and fresh bread. Great deal.' }, { n: 'Bryan H.', s: 4, t: 'Variety is wild for 35k — never know what you get.' } ],
+  },
+  {
+    id: 12, merchant: 'Monolog Coffee', type: 'Specialty Café', emoji: '\u2615',
+    hue1: '#d5c0a3', hue2: '#94714a', original: 82000, price: 31000, discount: 62,
+    category: 'Café', distance: 2.4, rating: 4.7, reviews: 309, lat: 56, lng: 84,
+    windowLabel: '6:30 – 8:30 PM', pickupEnd: 20.5, left: 5, area: 'SCBD',
+    contents: 'Pastries, a sandwich & signature bottled cold brew',
+    dietary: ['Vegetarian'],
+    blurb: 'Sleek SCBD roastery known for competition-grade espresso and minimalist interiors.',
+    geo: [-6.2271, 106.8011],
+    revs: [ { n: 'Kevin S.', s: 5, t: 'Cold brew + pastries, premium quality for 31k.' }, { n: 'Anya R.', s: 5, t: 'My favourite rescue — consistently great.' } ],
+  },
 ];
 
-const CATEGORIES = ['All', 'Bakery', 'Patisserie', 'Café'];
+const CATEGORIES = ['All', 'Bakery', 'Patisserie', 'Café', 'Restaurant', 'Grocery'];
 
 const PAYMENTS = [
   { id: 'gopay', name: 'GoPay', emoji: '\u{1F7E2}', balance: 'Rp 250.000' },
@@ -207,9 +275,9 @@ const BagImage = ({ bag, h = 200, rounded = 0, showEmoji = true }) => (
     position: 'relative', height: h, borderRadius: rounded, overflow: 'hidden',
     background: `radial-gradient(120% 100% at 30% 20%, ${bag.hue1} 0%, ${bag.hue2} 70%, ${C.mocha} 130%)`,
   }}>
-    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(44,24,16,0.5) 100%)' }} />
+    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(28,23,18,0.5) 100%)' }} />
     {showEmoji && (
-      <div className="sk-float" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: h * 0.4, filter: 'drop-shadow(0 8px 16px rgba(44,24,16,0.35))' }}>
+      <div className="sk-float" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: h * 0.4, filter: 'drop-shadow(0 8px 16px rgba(28,23,18,0.35))' }}>
         {bag.emoji}
       </div>
     )}
@@ -231,10 +299,10 @@ const Pill = ({ children, bg, color, style }) => (
 
 const StatusBadge = ({ status }) => {
   const map = {
-    confirmed: { t: 'Confirmed', bg: 'rgba(107,125,94,0.15)', c: C.sage, dot: C.sage, pulse: false },
-    ready: { t: 'Ready for pickup', bg: 'rgba(200,161,58,0.18)', c: '#9c7a1f', dot: C.gold, pulse: true },
+    confirmed: { t: 'Confirmed', bg: 'rgba(62,124,83,0.15)', c: C.sage, dot: C.sage, pulse: false },
+    ready: { t: 'Ready for pickup', bg: 'rgba(189,155,63,0.18)', c: '#9c7a1f', dot: C.gold, pulse: true },
     completed: { t: 'Completed', bg: 'rgba(109,76,61,0.12)', c: C.mocha, dot: C.mocha, pulse: false },
-    cancelled: { t: 'Cancelled', bg: 'rgba(168,83,74,0.12)', c: C.danger, dot: C.danger, pulse: false },
+    cancelled: { t: 'Cancelled', bg: 'rgba(209,74,63,0.12)', c: C.danger, dot: C.danger, pulse: false },
   };
   const s = map[status] || map.confirmed;
   return (
@@ -394,8 +462,8 @@ const LeafletMap = ({ bags, selectedId, onSelect, gold, goldLight }) => {
       const map = L.map(elRef.current, {
         center: [-6.2400, 106.8150], zoom: 14, zoomControl: false, attributionControl: false,
       });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, crossOrigin: true,
       }).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
       mapRef.current = map;
@@ -413,7 +481,9 @@ const LeafletMap = ({ bags, selectedId, onSelect, gold, goldLight }) => {
       // user location dot
       L.circleMarker([-6.2400, 106.8150], { radius: 7, color: '#3b6ea5', fillColor: '#3b6ea5', fillOpacity: 1, weight: 3 }).addTo(map);
       setReady(true);
-      setTimeout(() => map.invalidateSize(), 200);
+      // Fire invalidateSize repeatedly — the map div often has no height at first
+      // paint inside the phone shell, which leaves tiles unrendered (blank canvas).
+      [60, 250, 600, 1200].forEach((d) => setTimeout(() => { try { map.invalidateSize(); } catch {} }, d));
     });
     return () => { cancelled = true; if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, []); // eslint-disable-line
@@ -491,6 +561,42 @@ const SisaKuApp = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [maxPrice, setMaxPrice] = useState(60000);
   const [mapSelected, setMapSelected] = useState(null);
+
+  /* ---- toolbar shrink-on-scroll ---- */
+  const [navShrunk, setNavShrunk] = useState(false);
+  const lastScrollY = useRef(0);
+  const navWrapRef = useRef(null);
+  const [navFullW, setNavFullW] = useState(0);
+  // Measure the dock's full pixel width so width animates px -> px (smooth).
+  // Animating to/from 'auto' or '100%' is what made it snap.
+  useEffect(() => {
+    const measure = () => {
+      if (navWrapRef.current) {
+        const w = navWrapRef.current.clientWidth - 32; // wrapper has 16px padding each side
+        if (w > 0) setNavFullW(w);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [screen]);
+  const handleScroll = (e) => {
+    const y = e.currentTarget.scrollTop;
+    const last = lastScrollY.current;
+    const delta = y - last;
+    if (y < 40) {
+      // near the top — always full width
+      if (navShrunk) setNavShrunk(false);
+    } else if (delta > 10) {
+      // scrolling down with intent — shrink
+      if (!navShrunk) setNavShrunk(true);
+    } else if (delta < -10) {
+      // scrolling up with intent — expand
+      if (navShrunk) setNavShrunk(false);
+    }
+    // ignore tiny sub-threshold moves (momentum jitter) — keeps current state
+    if (Math.abs(delta) > 4) lastScrollY.current = y;
+  };
 
   /* ---- notifications ---- */
   const [notifications, setNotifications] = useState([
@@ -605,7 +711,7 @@ const SisaKuApp = () => {
   /* ---- derived ---- */
   const isFav = (id) => favorites.includes(id);
   const toggleFav = (id) => setFavorites((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
-  const go = (next) => { setPrevScreen(screen); setScreen(next); };
+  const go = (next) => { setPrevScreen(screen); setScreen(next); setNavShrunk(false); lastScrollY.current = 0; };
   const openBag = (bag) => { setSelectedBag(bag); setQty(1); go('details'); };
   const openMerchant = (bag) => { setSelectedMerchant(bag); go('merchant'); };
 
@@ -728,7 +834,7 @@ const SisaKuApp = () => {
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 34px', textAlign: 'center', position: 'relative' }}>
           <button onClick={() => setScreen('chooseRole')} style={{ position: 'absolute', top: 24, right: 22, background: 'none', border: 'none', color: C.latte, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Skip</button>
-          <div key={onboardStep} className="sk-scalein" style={{ width: 150, height: 150, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 74, marginBottom: 38, background: `radial-gradient(circle at 35% 30%, #fff, ${C.parchment})`, boxShadow: `0 20px 50px rgba(44,24,16,0.12), inset 0 0 0 1px ${C.parchment}` }}>
+          <div key={onboardStep} className="sk-scalein" style={{ width: 150, height: 150, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 74, marginBottom: 38, background: `radial-gradient(circle at 35% 30%, #fff, ${C.parchment})`, boxShadow: `0 20px 50px rgba(28,23,18,0.12), inset 0 0 0 1px ${C.parchment}` }}>
             <span className="sk-float">{s.emoji}</span>
           </div>
           <div key={'t' + onboardStep} className="sk-fadeup sk-display" style={{ fontSize: 32, fontWeight: 600, color: C.cocoa, lineHeight: 1.15, whiteSpace: 'pre-line', marginBottom: 16 }}>{s.title}</div>
@@ -762,8 +868,8 @@ const SisaKuApp = () => {
         </div>
 
         {/* Shopper card */}
-        <button onClick={() => { setRole('consumer'); setScreen('home'); }} className="sk-fadeup sk-press" style={{ animationDelay: '0.18s', width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', borderRadius: 22, padding: 20, marginBottom: 16, background: C.cream, boxShadow: '0 14px 34px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 58, height: 58, borderRadius: 18, flexShrink: 0, background: `linear-gradient(135deg, ${C.caramel}, ${C.mocha})`, display: 'grid', placeItems: 'center', fontSize: 28 }}>🛍️</div>
+        <button onClick={() => { setRole('consumer'); setScreen('home'); }} className="sk-fadeup sk-press sk-glass-strong" style={{ animationDelay: '0.18s', width: '100%', textAlign: 'left', cursor: 'pointer', borderRadius: 26, padding: 20, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 999, flexShrink: 0, background: `linear-gradient(135deg, ${C.caramel}, ${C.coffee})`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)', display: 'grid', placeItems: 'center', fontSize: 28 }}>🛍️</div>
           <div style={{ flex: 1 }}>
             <div className="sk-display" style={{ fontSize: 19, fontWeight: 600, color: C.cocoa }}>I'm a shopper</div>
             <div style={{ fontSize: 13, color: C.latte, marginTop: 3, lineHeight: 1.4 }}>Discover & rescue surprise bags near you at 50–70% off</div>
@@ -772,8 +878,8 @@ const SisaKuApp = () => {
         </button>
 
         {/* Merchant card */}
-        <button onClick={() => { setRole('merchant'); setMScreen('mDash'); }} className="sk-fadeup sk-press" style={{ animationDelay: '0.26s', width: '100%', textAlign: 'left', border: `1px solid rgba(230,200,105,0.35)`, cursor: 'pointer', borderRadius: 22, padding: 20, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 58, height: 58, borderRadius: 18, flexShrink: 0, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', fontSize: 28 }}>🏪</div>
+        <button onClick={() => { setRole('merchant'); setMScreen('mDash'); }} className="sk-fadeup sk-press sk-glass-dark" style={{ animationDelay: '0.26s', width: '100%', textAlign: 'left', cursor: 'pointer', borderRadius: 26, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 999, flexShrink: 0, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)', display: 'grid', placeItems: 'center', fontSize: 28 }}>🏪</div>
           <div style={{ flex: 1 }}>
             <div className="sk-display" style={{ fontSize: 19, fontWeight: 600, color: C.cream }}>I'm a merchant</div>
             <div style={{ fontSize: 13, color: C.sand, marginTop: 3, lineHeight: 1.4 }}>List surplus food, manage orders & verify pickups</div>
@@ -792,18 +898,18 @@ const SisaKuApp = () => {
   const renderBagCard = (bag, index) => {
     const closing = bag.left <= 2;
     return (
-      <div key={bag.id} className="sk-fadeup sk-card" style={{ animationDelay: `${index * 0.06}s`, borderRadius: 22, overflow: 'hidden', background: '#fff', boxShadow: '0 6px 22px rgba(44,24,16,0.08)', border: `1px solid ${C.parchment}`, marginBottom: 16, cursor: 'pointer' }} onClick={() => openBag(bag)}>
+      <div key={bag.id} className="sk-fadeup sk-card" style={{ animationDelay: `${index * 0.06}s`, borderRadius: 26, overflow: 'hidden', background: '#fff', boxShadow: '0 12px 36px rgba(28,23,18,0.07)', border: '1px solid rgba(28,24,20,0.05)', marginBottom: 16, cursor: 'pointer' }} onClick={() => openBag(bag)}>
         <div style={{ position: 'relative' }}>
           <BagImage bag={bag} h={150} />
-          <button onClick={(e) => { e.stopPropagation(); toggleFav(bag.id); }} className="sk-press" style={{ position: 'absolute', top: 12, right: 12, width: 38, height: 38, borderRadius: 999, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+          <button onClick={(e) => { e.stopPropagation(); toggleFav(bag.id); }} className="sk-press" style={{ position: 'absolute', top: 12, right: 12, width: 38, height: 38, borderRadius: 999, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>
             <Heart size={18} fill={isFav(bag.id) ? '#c8506e' : 'none'} color={isFav(bag.id) ? '#c8506e' : C.mocha} />
           </button>
           <div style={{ position: 'absolute', top: 12, left: 12 }}>
             <Pill bg={`linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`} color={C.goldLight}><Tag size={11} /> {bag.discount}% off</Pill>
           </div>
           <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <Pill bg="rgba(255,255,255,0.92)" color={C.cocoa} style={{ backdropFilter: 'blur(4px)' }}><Clock size={11} /> {countdownTo(bag.pickupEnd)} left</Pill>
-            {closing && <Pill bg="rgba(168,83,74,0.92)" color="#fff" style={{ backdropFilter: 'blur(4px)' }}>Only {bag.left} left</Pill>}
+            <Pill bg="rgba(255,255,255,0.92)" color={C.cocoa} style={{ backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}><Clock size={11} /> {countdownTo(bag.pickupEnd)} left</Pill>
+            {closing && <Pill bg="rgba(209,74,63,0.92)" color="#fff" style={{ backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>Only {bag.left} left</Pill>}
           </div>
         </div>
         <div style={{ padding: '14px 16px 16px' }}>
@@ -826,8 +932,8 @@ const SisaKuApp = () => {
               <span style={{ fontSize: 12, color: C.sand, textDecoration: 'line-through', marginRight: 7 }}>{idr(bag.original)}</span>
               <span className="sk-display" style={{ fontSize: 19, fontWeight: 700, color: C.cocoa }}>{idr(bag.price)}</span>
             </div>
-            <div className="sk-press" style={{ width: 40, height: 40, borderRadius: 13, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', boxShadow: '0 6px 14px rgba(200,161,58,0.4)' }}>
-              <Plus size={20} color={C.espresso} />
+            <div className="sk-press" style={{ width: 40, height: 40, borderRadius: 999, background: `linear-gradient(180deg, ${C.coffee}, ${C.cocoa})`, display: 'grid', placeItems: 'center', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 6px 16px rgba(28,23,18,0.25)' }}>
+              <Plus size={20} color={'#fff'} />
             </div>
           </div>
         </div>
@@ -865,14 +971,14 @@ const SisaKuApp = () => {
           </div>
         </div>
 
-        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
+        <div className="sk-noscroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
           <div className="sk-fadeup" style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
             {[
               { icon: <Leaf size={15} color={C.sage} />, big: stats.rescued, small: 'bags saved' },
               { icon: <Wallet size={15} color={C.gold} />, big: idr(stats.saved).replace('Rp\u202f', ''), small: 'Rp saved' },
               { icon: <Sparkles size={15} color={C.caramel} />, big: stats.co2 + 'kg', small: 'CO\u2082 cut' },
             ].map((s, i) => (
-              <div key={i} style={{ flex: 1, background: '#fff', borderRadius: 16, padding: '12px 10px', textAlign: 'center', border: `1px solid ${C.parchment}`, boxShadow: '0 3px 10px rgba(44,24,16,0.04)' }}>
+              <div key={i} className="sk-glass" style={{ flex: 1, borderRadius: 20, padding: '12px 10px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 5 }}>{s.icon}</div>
                 <div className="sk-display" style={{ fontSize: 16, fontWeight: 700, color: C.cocoa, lineHeight: 1 }}>{s.big}</div>
                 <div style={{ fontSize: 10, color: C.latte, marginTop: 3 }}>{s.small}</div>
@@ -884,14 +990,14 @@ const SisaKuApp = () => {
             {CATEGORIES.map((cat) => {
               const on = activeCategory === cat;
               return (
-                <button key={cat} onClick={() => setActiveCategory(cat)} className="sk-press" style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999, border: on ? 'none' : `1px solid ${C.sand}`, background: on ? `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})` : '#fff', color: on ? C.cream : C.mocha, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{cat}</button>
+                <button key={cat} onClick={() => setActiveCategory(cat)} className="sk-press" style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999, border: on ? '1px solid transparent' : '1px solid rgba(255,255,255,0.65)', background: on ? `linear-gradient(180deg, ${C.coffee}, ${C.cocoa})` : 'rgba(255,255,255,0.55)', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)', color: on ? C.cream : C.mocha, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{cat}</button>
               );
             })}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 13, color: C.latte }}><span style={{ fontWeight: 700, color: C.cocoa }}>{list.length}</span> collections nearby</div>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sk-input" style={{ border: `1px solid ${C.sand}`, borderRadius: 10, padding: '7px 10px', fontSize: 12.5, color: C.cocoa, background: '#fff', cursor: 'pointer', outline: 'none' }}>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sk-input" style={{ border: '1px solid rgba(255,255,255,0.65)', borderRadius: 999, padding: '8px 14px', fontSize: 12.5, fontWeight: 500, color: C.cocoa, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)', cursor: 'pointer', outline: 'none', appearance: 'none' }}>
               <option value="recommended">Recommended</option>
               <option value="price">Price: low to high</option>
               <option value="distance">Nearest first</option>
@@ -931,14 +1037,14 @@ const SisaKuApp = () => {
         <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 96 }}>
           <div style={{ position: 'relative' }}>
             <BagImage bag={bag} h={300} />
-            <button onClick={() => go(prevScreen === 'merchant' ? 'merchant' : 'home')} className="sk-press" style={{ position: 'absolute', top: 48, left: 18, width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+            <button onClick={() => go(prevScreen === 'merchant' ? 'merchant' : 'home')} className="sk-press" style={{ position: 'absolute', top: 48, left: 18, width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>
               <ChevronLeft size={22} color={C.cocoa} />
             </button>
             <div style={{ position: 'absolute', top: 48, right: 18, display: 'flex', gap: 8 }}>
-              <button onClick={() => setToast({ icon: '\u{1F517}', text: 'Share link copied' })} className="sk-press" style={{ width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+              <button onClick={() => setToast({ icon: '\u{1F517}', text: 'Share link copied' })} className="sk-press" style={{ width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>
                 <Share2 size={18} color={C.cocoa} />
               </button>
-              <button onClick={() => toggleFav(bag.id)} className="sk-press" style={{ width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+              <button onClick={() => toggleFav(bag.id)} className="sk-press" style={{ width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>
                 <Heart size={18} fill={isFav(bag.id) ? '#c8506e' : 'none'} color={isFav(bag.id) ? '#c8506e' : C.cocoa} />
               </button>
             </div>
@@ -947,7 +1053,7 @@ const SisaKuApp = () => {
             </div>
           </div>
 
-          <div style={{ position: 'relative', marginTop: -22, background: C.cream, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: '22px 20px 0' }}>
+          <div style={{ position: 'relative', marginTop: -26, background: C.cream, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: '24px 20px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
               <div>
                 <div className="sk-display" style={{ fontSize: 24, fontWeight: 600, color: C.cocoa, lineHeight: 1.1 }}>{bag.merchant}</div>
@@ -964,7 +1070,7 @@ const SisaKuApp = () => {
                 { icon: <MapPin size={16} color={C.sage} />, top: bag.distance + ' km', bot: 'away' },
                 { icon: <Clock size={16} color={C.caramel} />, top: countdownTo(bag.pickupEnd), bot: 'to collect' },
               ].map((f, i) => (
-                <div key={i} style={{ flex: 1, background: '#fff', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: `1px solid ${C.parchment}` }}>
+                <div key={i} className="sk-glass" style={{ flex: 1, borderRadius: 18, padding: '12px 8px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 5 }}>{f.icon}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.cocoa }}>{f.top}</div>
                   <div style={{ fontSize: 10.5, color: C.latte, marginTop: 1 }}>{f.bot}</div>
@@ -975,7 +1081,7 @@ const SisaKuApp = () => {
             <Divider my={20} />
             <div className="sk-display" style={{ fontSize: 16, fontWeight: 600, color: C.cocoa, marginBottom: 8 }}>What might be inside</div>
             <div style={{ fontSize: 14, lineHeight: 1.6, color: C.mocha }}>{bag.contents}.</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(107,125,94,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(62,124,83,0.1)' }}>
               <Sparkles size={15} color={C.sage} />
               <span style={{ fontSize: 12.5, color: C.sage, fontWeight: 500 }}>It’s a surprise! Contents vary with what’s left at close.</span>
             </div>
@@ -1044,7 +1150,7 @@ const SisaKuApp = () => {
             <div style={{ fontSize: 11, color: C.sand, textDecoration: 'line-through' }}>{idr(bag.original)}</div>
             <div className="sk-display" style={{ fontSize: 22, fontWeight: 700, color: C.cocoa, lineHeight: 1 }}>{idr(bag.price)}</div>
           </div>
-          <button onClick={() => { setQty(1); go('checkout'); }} className="sk-press" style={{ flex: 1, padding: 15, borderRadius: 15, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 10px 24px rgba(44,24,16,0.28)' }}>
+          <button onClick={() => { setQty(1); go('checkout'); }} className="sk-press" style={{ flex: 1, padding: 15, borderRadius: 15, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 10px 24px rgba(28,23,18,0.28)' }}>
             <ShoppingBag size={18} /> Reserve bag
           </button>
         </div>
@@ -1062,15 +1168,15 @@ const SisaKuApp = () => {
         <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 96 }}>
           <div style={{ position: 'relative' }}>
             <BagImage bag={m} h={180} showEmoji={false} />
-            <button onClick={() => go('details')} className="sk-press" style={{ position: 'absolute', top: 48, left: 18, width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+            <button onClick={() => go('details')} className="sk-press" style={{ position: 'absolute', top: 48, left: 18, width: 40, height: 40, borderRadius: 13, border: 'none', background: 'rgba(255,255,255,0.92)', display: 'grid', placeItems: 'center', cursor: 'pointer', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)' }}>
               <ChevronLeft size={22} color={C.cocoa} />
             </button>
           </div>
           <div style={{ padding: '0 20px' }}>
             <div style={{ marginTop: -42, display: 'flex', alignItems: 'flex-end', gap: 14 }}>
-              <div style={{ width: 84, height: 84, borderRadius: 22, background: '#fff', display: 'grid', placeItems: 'center', fontSize: 42, boxShadow: '0 8px 20px rgba(44,24,16,0.18)', border: `1px solid ${C.parchment}` }}>{m.emoji}</div>
+              <div style={{ width: 84, height: 84, borderRadius: 22, background: '#fff', display: 'grid', placeItems: 'center', fontSize: 42, boxShadow: '0 8px 20px rgba(28,23,18,0.18)', border: `1px solid ${C.parchment}` }}>{m.emoji}</div>
               <div style={{ paddingBottom: 6 }}>
-                <Pill bg="rgba(107,125,94,0.15)" color={C.sage}><ShieldCheck size={11} /> Verified partner</Pill>
+                <Pill bg="rgba(62,124,83,0.15)" color={C.sage}><ShieldCheck size={11} /> Verified partner</Pill>
               </div>
             </div>
             <div className="sk-display" style={{ fontSize: 25, fontWeight: 600, color: C.cocoa, marginTop: 14 }}>{m.merchant}</div>
@@ -1128,22 +1234,22 @@ const SisaKuApp = () => {
       <div style={{ position: 'absolute', inset: 0, background: C.cream, overflow: 'hidden' }}>
         <LeafletMap bags={BAGS} selectedId={sel ? sel.id : null} onSelect={(b) => setMapSelected(b)} gold={C.gold} goldLight={C.goldLight} />
 
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '48px 18px 0', display: 'flex', gap: 10 }}>
-          <button onClick={() => go('home')} className="sk-press" style={{ width: 42, height: 42, borderRadius: 13, border: 'none', background: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(44,24,16,0.15)' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '52px 16px 0', display: 'flex', gap: 10 }}>
+          <button onClick={() => go('home')} className="sk-press sk-glass-strong" style={{ width: 44, height: 44, borderRadius: 999, border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <ChevronLeft size={22} color={C.cocoa} />
           </button>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', borderRadius: 13, background: '#fff', boxShadow: '0 4px 12px rgba(44,24,16,0.15)' }}>
+          <div className="sk-glass-strong" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', borderRadius: 999 }}>
             <Search size={17} color={C.latte} />
-            <span style={{ fontSize: 13.5, color: C.latte }}>{BAGS.length} rescues near Kemang</span>
+            <span style={{ fontSize: 13.5, color: C.mocha, fontWeight: 500 }}>{BAGS.length} rescues near Kemang</span>
           </div>
         </div>
 
         {sel && (
-          <div key={sel.id} className="sk-slideup" style={{ position: 'absolute', bottom: 24, left: 16, right: 16 }}>
-            <div onClick={() => openBag(sel)} className="sk-card" style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 18, background: '#fff', boxShadow: '0 12px 30px rgba(44,24,16,0.22)', cursor: 'pointer', border: `1px solid ${C.parchment}` }}>
+          <div key={sel.id} className="sk-slideup" style={{ position: 'absolute', bottom: 100, left: 16, right: 16, zIndex: 20 }}>
+            <div onClick={() => openBag(sel)} className="sk-card" style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 22, cursor: 'pointer', background: '#fff', border: `1px solid ${C.parchment}`, boxShadow: '0 16px 40px rgba(28,23,18,0.22)' }}>
               <div style={{ width: 70, height: 70, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}><BagImage bag={sel} h={70} /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="sk-display" style={{ fontSize: 16, fontWeight: 600, color: C.cocoa, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.merchant}</div>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div className="sk-display" style={{ fontSize: 16, fontWeight: 700, color: C.cocoa, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>{sel.merchant}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: C.latte, marginTop: 3 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><Star size={11} fill={C.gold} color={C.gold} /> {sel.rating}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><MapPin size={11} /> {sel.distance}km</span>
@@ -1190,7 +1296,7 @@ const SisaKuApp = () => {
             </div>
           </div>
 
-          <div className="sk-fadeup" style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, padding: '12px 14px', borderRadius: 14, background: 'rgba(200,161,58,0.12)' }}>
+          <div className="sk-fadeup" style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, padding: '12px 14px', borderRadius: 14, background: 'rgba(189,155,63,0.12)' }}>
             <Calendar size={17} color="#9c7a1f" />
             <div style={{ fontSize: 12.5, color: '#9c7a1f', fontWeight: 500 }}>Collect today between {bag.windowLabel} at {bag.area}.</div>
           </div>
@@ -1200,7 +1306,7 @@ const SisaKuApp = () => {
             {PAYMENTS.map((p) => {
               const on = paymentMethod === p.id;
               return (
-                <button key={p.id} onClick={() => setPaymentMethod(p.id)} className="sk-press" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14, border: on ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: on ? 'rgba(200,161,58,0.06)' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                <button key={p.id} onClick={() => setPaymentMethod(p.id)} className="sk-press" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14, border: on ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: on ? 'rgba(189,155,63,0.06)' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                   <span style={{ fontSize: 22 }}>{p.emoji}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.cocoa }}>{p.name}</div>
@@ -1216,7 +1322,7 @@ const SisaKuApp = () => {
 
           <div className="sk-display" style={{ fontSize: 16, fontWeight: 600, color: C.cocoa, margin: '22px 0 12px' }}>Promo code</div>
           {promoApplied ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 15px', borderRadius: 14, background: 'rgba(107,125,94,0.12)', border: '1px solid rgba(107,125,94,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 15px', borderRadius: 14, background: 'rgba(62,124,83,0.12)', border: '1px solid rgba(62,124,83,0.3)' }}>
               <Gift size={17} color={C.sage} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: C.sage }}>{promoApplied} applied</div>
@@ -1263,7 +1369,7 @@ const SisaKuApp = () => {
     return (
       <div className="sk-grain" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: `radial-gradient(120% 80% at 50% 0%, ${C.coffee} 0%, ${C.cocoa} 70%)` }}>
         <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '60px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div className="sk-pop" style={{ width: 88, height: 88, borderRadius: '50%', background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', boxShadow: '0 16px 40px rgba(200,161,58,0.4)' }}>
+          <div className="sk-pop" style={{ width: 88, height: 88, borderRadius: '50%', background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', boxShadow: '0 16px 40px rgba(189,155,63,0.4)' }}>
             <Check size={46} color={C.espresso} strokeWidth={2.4} />
           </div>
           <div className="sk-fadeup" style={{ animationDelay: '0.15s' }}>
@@ -1271,7 +1377,7 @@ const SisaKuApp = () => {
             <div className="sk-serif" style={{ fontSize: 16, fontStyle: 'italic', color: C.sand, marginTop: 4 }}>One more meal saved from the bin 🌍</div>
           </div>
 
-          <div className="sk-fadeup" style={{ animationDelay: '0.3s', width: '100%', background: C.cream, borderRadius: 22, marginTop: 28, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+          <div className="sk-fadeup" style={{ animationDelay: '0.3s', width: '100%', background: C.cream, borderRadius: 28, marginTop: 28, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
             <div style={{ padding: '22px 22px 16px' }}>
               <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.latte }}>Show this code at pickup</div>
               <div className="sk-display sk-gold-text" style={{ fontSize: 52, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.1, marginTop: 6 }}>{o.code}</div>
@@ -1322,7 +1428,7 @@ const SisaKuApp = () => {
             <div style={{ fontSize: 11.5, color: C.latte, marginTop: 3 }}>#{o.id} · {o.qty} bag{o.qty > 1 ? 's' : ''} · {idr(o.total)}</div>
             {active ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, background: closing ? 'rgba(168,83,74,0.12)' : C.parchment }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, background: closing ? 'rgba(209,74,63,0.12)' : C.parchment }}>
                   <Clock size={12} color={closing ? C.danger : C.mocha} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: closing ? C.danger : C.mocha }}>{cd === 'closed' ? 'Window closed' : `${cd} to collect`}</span>
                 </div>
@@ -1335,7 +1441,7 @@ const SisaKuApp = () => {
                   <span style={{ fontSize: 11.5, color: C.latte, marginLeft: 4 }}>You rated this</span>
                 </div>
               ) : (
-                <button onClick={(e) => { e.stopPropagation(); setRateTarget(o); setRatingStars(0); setRatingText(''); }} className="sk-press" style={{ marginTop: 8, padding: '6px 12px', borderRadius: 999, border: `1px solid ${C.gold}`, background: 'rgba(200,161,58,0.08)', color: '#9c7a1f', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                <button onClick={(e) => { e.stopPropagation(); setRateTarget(o); setRatingStars(0); setRatingText(''); }} className="sk-press" style={{ marginTop: 8, padding: '6px 12px', borderRadius: 999, border: `1px solid ${C.gold}`, background: 'rgba(189,155,63,0.08)', color: '#9c7a1f', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   ★ Rate your bag
                 </button>
               )
@@ -1345,7 +1451,7 @@ const SisaKuApp = () => {
           </div>
         </div>
         {o.status === 'ready' && (
-          <div style={{ padding: '10px 14px', background: 'rgba(200,161,58,0.1)', borderTop: `1px solid ${C.parchment}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '10px 14px', background: 'rgba(189,155,63,0.1)', borderTop: `1px solid ${C.parchment}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, color: '#9c7a1f', fontWeight: 600 }}>Pickup code</span>
             <span className="sk-display" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.12em', color: C.cocoa }}>{o.code}</span>
           </div>
@@ -1362,11 +1468,11 @@ const SisaKuApp = () => {
           <div className="sk-display" style={{ fontSize: 26, fontWeight: 600, color: C.cocoa }}>My Orders</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 16, background: C.parchment, borderRadius: 14, padding: 5 }}>
             {[['active', `Active (${activeOrders.length})`], ['past', `History (${pastOrders.length})`]].map(([k, label]) => (
-              <button key={k} onClick={() => setOrderTab(k)} className="sk-press" style={{ flex: 1, padding: 10, borderRadius: 10, border: 'none', cursor: 'pointer', background: orderTab === k ? '#fff' : 'transparent', color: orderTab === k ? C.cocoa : C.latte, fontSize: 13.5, fontWeight: 600, boxShadow: orderTab === k ? '0 2px 6px rgba(44,24,16,0.08)' : 'none' }}>{label}</button>
+              <button key={k} onClick={() => setOrderTab(k)} className="sk-press" style={{ flex: 1, padding: 10, borderRadius: 10, border: 'none', cursor: 'pointer', background: orderTab === k ? '#fff' : 'transparent', color: orderTab === k ? C.cocoa : C.latte, fontSize: 13.5, fontWeight: 600, boxShadow: orderTab === k ? '0 2px 6px rgba(28,23,18,0.08)' : 'none' }}>{label}</button>
             ))}
           </div>
         </div>
-        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
+        <div className="sk-noscroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
           {list.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '70px 20px', color: C.latte }}>
               <div style={{ fontSize: 52, marginBottom: 14 }}>{orderTab === 'active' ? '\u{1F6CD}\u{FE0F}' : '\u{1F4DC}'}</div>
@@ -1447,7 +1553,7 @@ const SisaKuApp = () => {
     const progress = Math.min(100, (stats.rescued / nextTier) * 100);
     return (
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
-        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
+        <div className="sk-noscroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
           <div style={{ padding: '58px 20px 8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 64, height: 64, borderRadius: 999, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', fontSize: 26, fontWeight: 700, color: C.espresso, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(189,155,63,0.3)' }}>A</div>
@@ -1461,9 +1567,9 @@ const SisaKuApp = () => {
 
           <div style={{ padding: 20 }}>
             <div className="sk-fadeup" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={stats.rescued} label="Bags rescued" tint="rgba(200,161,58,0.1)" />
-              <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(stats.saved)} label="Total saved" tint="rgba(107,125,94,0.1)" />
-              <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={stats.co2 + ' kg'} label="CO\u2082 prevented" tint="rgba(107,125,94,0.1)" />
+              <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={stats.rescued} label="Bags rescued" tint="rgba(189,155,63,0.1)" />
+              <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(stats.saved)} label="Total saved" tint="rgba(62,124,83,0.1)" />
+              <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={stats.co2 + ' kg'} label="CO\u2082 prevented" tint="rgba(62,124,83,0.1)" />
               <ImpactCard icon={<Sparkles size={18} color={C.caramel} />} value={stats.meals} label="Meals saved" tint="rgba(139,101,72,0.1)" />
             </div>
 
@@ -1483,7 +1589,7 @@ const SisaKuApp = () => {
             <div className="sk-fadeup" style={{ marginTop: 16, padding: 18, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div className="sk-display" style={{ fontSize: 15, fontWeight: 600, color: C.cocoa }}>This week</div>
-                <Pill bg="rgba(107,125,94,0.12)" color={C.sage}><TrendingUp size={11} /> +18%</Pill>
+                <Pill bg="rgba(62,124,83,0.12)" color={C.sage}><TrendingUp size={11} /> +18%</Pill>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 90, gap: 8 }}>
                 {weekly.map((v, i) => (
@@ -1513,7 +1619,7 @@ const SisaKuApp = () => {
               ))}
             </div>
 
-            <button onClick={() => { setRole('merchant'); setMScreen('mDash'); }} className="sk-press" style={{ width: '100%', marginTop: 16, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, boxShadow: '0 10px 24px rgba(44,24,16,0.22)' }}>
+            <button onClick={() => { setRole('merchant'); setMScreen('mDash'); }} className="sk-press" style={{ width: '100%', marginTop: 16, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, boxShadow: '0 10px 24px rgba(28,23,18,0.22)' }}>
               <Store size={18} color={C.goldLight} /> I’m a merchant — open dashboard
             </button>
             <button onClick={() => { setOnboardStep(0); setScreen('onboarding'); }} style={{ width: '100%', marginTop: 10, padding: 14, borderRadius: 14, border: `1px solid ${C.sand}`, background: 'transparent', color: C.latte, fontSize: 13.5, fontWeight: 500, cursor: 'pointer' }}>Replay intro</button>
@@ -1527,9 +1633,9 @@ const SisaKuApp = () => {
   const renderNotifications = () => {
     const iconFor = (t) => {
       const map = {
-        deal: { i: <Tag size={17} color={C.gold} />, bg: 'rgba(200,161,58,0.12)' },
-        reminder: { i: <Clock size={17} color={C.danger} />, bg: 'rgba(168,83,74,0.1)' },
-        impact: { i: <Leaf size={17} color={C.sage} />, bg: 'rgba(107,125,94,0.12)' },
+        deal: { i: <Tag size={17} color={C.gold} />, bg: 'rgba(189,155,63,0.12)' },
+        reminder: { i: <Clock size={17} color={C.danger} />, bg: 'rgba(209,74,63,0.1)' },
+        impact: { i: <Leaf size={17} color={C.sage} />, bg: 'rgba(62,124,83,0.12)' },
         new: { i: <Store size={17} color={C.caramel} />, bg: 'rgba(139,101,72,0.12)' },
       };
       return map[t] || map.deal;
@@ -1541,7 +1647,7 @@ const SisaKuApp = () => {
           {notifications.map((n, i) => {
             const ic = iconFor(n.type);
             return (
-              <div key={n.id} onClick={() => setNotifications((p) => p.map((x) => x.id === n.id ? { ...x, read: true } : x))} className="sk-fadeup" style={{ animationDelay: `${i * 0.05}s`, display: 'flex', gap: 12, padding: 14, borderRadius: 16, marginBottom: 10, background: n.read ? '#fff' : 'rgba(200,161,58,0.06)', border: `1px solid ${n.read ? C.parchment : 'rgba(200,161,58,0.3)'}`, cursor: 'pointer', position: 'relative' }}>
+              <div key={n.id} onClick={() => setNotifications((p) => p.map((x) => x.id === n.id ? { ...x, read: true } : x))} className="sk-fadeup" style={{ animationDelay: `${i * 0.05}s`, display: 'flex', gap: 12, padding: 14, borderRadius: 16, marginBottom: 10, background: n.read ? '#fff' : 'rgba(189,155,63,0.06)', border: `1px solid ${n.read ? C.parchment : 'rgba(189,155,63,0.3)'}`, cursor: 'pointer', position: 'relative' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: ic.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{ic.i}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: C.cocoa, lineHeight: 1.3 }}>{n.title}</div>
@@ -1571,7 +1677,7 @@ const SisaKuApp = () => {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {CATEGORIES.map((cat) => {
             const on = activeCategory === cat;
-            return <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '9px 16px', borderRadius: 999, border: on ? 'none' : `1px solid ${C.sand}`, background: on ? C.cocoa : '#fff', color: on ? C.cream : C.mocha, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{cat}</button>;
+            return <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '9px 16px', borderRadius: 999, border: on ? 'none' : `1px solid ${C.sand}`, background: on ? C.cocoa : 'rgba(255,255,255,0.6)', color: on ? C.cream : C.mocha, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{cat}</button>;
           })}
         </div>
 
@@ -1595,7 +1701,7 @@ const SisaKuApp = () => {
   const renderCancelModal = () => (
     <div className="sk-fade" style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(20,16,12,0.4)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'grid', placeItems: 'center', padding: 28 }} onClick={() => setCancelTarget(null)}>
       <div className="sk-scalein sk-glass-strong" onClick={(e) => e.stopPropagation()} style={{ width: '100%', borderRadius: 28, padding: 26, textAlign: 'center' }}>
-        <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(168,83,74,0.12)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
+        <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(209,74,63,0.12)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
           <X size={28} color={C.danger} />
         </div>
         <div className="sk-display" style={{ fontSize: 20, fontWeight: 600, color: C.cocoa }}>Cancel this order?</div>
@@ -1647,18 +1753,24 @@ const SisaKuApp = () => {
 
   const renderBottomNav = () => {
     if (!['home', 'map', 'orders', 'profile'].includes(screen)) return null;
+    // map screen has its own card; no shrink there
+    const shrink = navShrunk && screen !== 'map';
+    const shrunkW = NAV.length * 46 + 12; // icon-only width
+    // px -> px width transition is smooth; 'auto'/'100%' is not. Fall back to '100%' only until measured.
+    const barWidth = shrink ? shrunkW : (navFullW > 0 ? navFullW : '100%');
+    const ease = 'cubic-bezier(0.32,0.72,0,1)';
     return (
-      <div style={{ position: 'absolute', bottom: 22, left: 16, right: 16, zIndex: 30 }}>
-        <div className="sk-glass-strong" style={{ display: 'flex', padding: 6, borderRadius: 999 }}>
+      <div ref={navWrapRef} style={{ position: 'absolute', bottom: 22, left: 0, right: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}>
+        <div className="sk-glass-strong" style={{ display: 'flex', padding: 6, borderRadius: 999, width: barWidth, overflow: 'hidden', pointerEvents: 'auto', willChange: 'width', transition: `width 0.5s ${ease}` }}>
           {NAV.map((item) => {
             const on = screen === item.id;
             const Icon = item.icon;
             return (
-              <button key={item.id} onClick={() => go(item.id)} className="sk-press" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, border: 'none', background: on ? 'rgba(189,155,63,0.16)' : 'transparent', borderRadius: 999, padding: '9px 0 7px', cursor: 'pointer', position: 'relative', transition: 'background 0.3s cubic-bezier(0.32,0.72,0,1)' }}>
+              <button key={item.id} onClick={() => go(item.id)} className="sk-press" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 46, border: 'none', background: on ? 'rgba(189,155,63,0.16)' : 'transparent', borderRadius: 999, cursor: 'pointer', position: 'relative', transition: `background 0.4s ${ease}` }}>
                 <Icon size={21} color={on ? C.caramel : C.latte} strokeWidth={on ? 2.4 : 1.9} />
-                <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? C.cocoa : C.latte, letterSpacing: '-0.01em' }}>{item.label}</span>
+                <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? C.cocoa : C.latte, letterSpacing: '-0.01em', maxHeight: shrink ? 0 : 13, opacity: shrink ? 0 : 1, overflow: 'hidden', whiteSpace: 'nowrap', willChange: 'max-height, opacity', transition: `max-height 0.5s ${ease}, opacity 0.3s ease` }}>{item.label}</span>
                 {item.id === 'orders' && activeOrders.length > 0 && (
-                  <span style={{ position: 'absolute', top: 4, right: '50%', marginRight: -18, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>{activeOrders.length}</span>
+                  <span style={{ position: 'absolute', top: 3, right: shrink ? 8 : '50%', marginRight: shrink ? 0 : -18, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: `right 0.5s ${ease}, margin-right 0.5s ${ease}` }}>{activeOrders.length}</span>
                 )}
               </button>
             );
@@ -1684,7 +1796,7 @@ const SisaKuApp = () => {
           {/* Referral code */}
           <div style={{ fontSize: 13, fontWeight: 600, color: C.cocoa, marginBottom: 8 }}>Your invite code</div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-            <div style={{ flex: 1, padding: '16px 18px', borderRadius: 14, background: '#fff', border: `2px dashed ${C.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="sk-glass" style={{ flex: 1, padding: '16px 18px', borderRadius: 18, border: `2px dashed ${C.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span className="sk-display sk-gold-text" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.18em' }}>ARTHUR25</span>
             </div>
             <button onClick={() => setToast({ icon: '\u{1F4CB}', text: 'Code copied to clipboard' })} className="sk-press" style={{ padding: '0 20px', borderRadius: 14, border: 'none', background: C.cocoa, color: C.cream, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Copy</button>
@@ -1702,7 +1814,7 @@ const SisaKuApp = () => {
           <div style={{ padding: 18, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div className="sk-display" style={{ fontSize: 15, fontWeight: 600, color: C.cocoa }}>Your referrals</div>
-              <Pill bg="rgba(200,161,58,0.15)" color="#9c7a1f"><Wallet size={11} /> Rp 75.000 earned</Pill>
+              <Pill bg="rgba(189,155,63,0.15)" color="#9c7a1f"><Wallet size={11} /> Rp 75.000 earned</Pill>
             </div>
             {[
               { n: 'Cherie W.', s: 'Joined & rescued', done: true },
@@ -1711,7 +1823,7 @@ const SisaKuApp = () => {
               { n: 'Invited — not yet joined', s: 'Pending', done: false },
             ].map((r, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < 3 ? `1px solid ${C.parchment}` : 'none' }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: r.done ? 'rgba(107,125,94,0.15)' : C.parchment, display: 'grid', placeItems: 'center' }}>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: r.done ? 'rgba(62,124,83,0.15)' : C.parchment, display: 'grid', placeItems: 'center' }}>
                   {r.done ? <Check size={16} color={C.sage} /> : <Clock size={16} color={C.latte} />}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1723,7 +1835,7 @@ const SisaKuApp = () => {
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 16, padding: '12px 14px', borderRadius: 12, background: 'rgba(107,125,94,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 16, padding: '12px 14px', borderRadius: 12, background: 'rgba(62,124,83,0.1)' }}>
             <Leaf size={15} color={C.sage} />
             <span style={{ fontSize: 12, color: C.sage, fontWeight: 500 }}>Every friend you bring rescues ~60 meals a year. Spread the word.</span>
           </div>
@@ -1757,10 +1869,10 @@ const SisaKuApp = () => {
       <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
         {/* Today snapshot */}
         <div className="sk-fadeup" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={mBagsSoldToday + '/' + mBagsListedToday} label="Bags sold today" tint="rgba(200,161,58,0.1)" />
-          <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(mNetToday)} label="Net earnings today" tint="rgba(107,125,94,0.1)" />
+          <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={mBagsSoldToday + '/' + mBagsListedToday} label="Bags sold today" tint="rgba(189,155,63,0.1)" />
+          <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(mNetToday)} label="Net earnings today" tint="rgba(62,124,83,0.1)" />
           <ImpactCard icon={<Clock size={18} color={C.caramel} />} value={mPendingPickups} label="Pickups pending" tint="rgba(139,101,72,0.1)" />
-          <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={(mBagsSoldToday * 1.3).toFixed(1) + 'kg'} label="CO\u2082 saved today" tint="rgba(107,125,94,0.1)" />
+          <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={(mBagsSoldToday * 1.3).toFixed(1) + 'kg'} label="CO\u2082 saved today" tint="rgba(62,124,83,0.1)" />
         </div>
 
         {/* Earnings explainer */}
@@ -1777,7 +1889,7 @@ const SisaKuApp = () => {
 
         {/* Quick actions */}
         <div className="sk-fadeup" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-          <button onClick={() => mGo('mCreate')} className="sk-press" style={{ flex: 1, padding: '16px 12px', borderRadius: 16, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, boxShadow: '0 10px 24px rgba(44,24,16,0.22)' }}>
+          <button onClick={() => mGo('mCreate')} className="sk-press" style={{ flex: 1, padding: '16px 12px', borderRadius: 16, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, boxShadow: '0 10px 24px rgba(28,23,18,0.22)' }}>
             <Plus size={22} color={C.goldLight} />
             <span style={{ fontSize: 13, fontWeight: 600 }}>List a bag</span>
           </button>
@@ -1795,7 +1907,7 @@ const SisaKuApp = () => {
           </div>
           {mOrders.filter((o) => o.status === 'awaiting').map((o) => (
             <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, background: '#fff', border: `1px solid ${C.parchment}`, marginBottom: 10 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(200,161,58,0.12)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(189,155,63,0.12)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                 <Clock size={18} color="#9c7a1f" />
               </div>
               <div style={{ flex: 1 }}>
@@ -1901,7 +2013,7 @@ const SisaKuApp = () => {
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.cocoa, display: 'block', marginBottom: 8 }}>Bag price</label>
-              <input className="sk-input" type="number" value={mForm.price} onChange={(e) => setMForm({ ...mForm, price: Number(e.target.value) })} style={{ width: '100%', padding: '13px 15px', borderRadius: 14, border: `1px solid ${C.gold}`, outline: 'none', fontSize: 14, color: C.cocoa, background: 'rgba(200,161,58,0.06)', fontWeight: 600 }} />
+              <input className="sk-input" type="number" value={mForm.price} onChange={(e) => setMForm({ ...mForm, price: Number(e.target.value) })} style={{ width: '100%', padding: '13px 15px', borderRadius: 14, border: `1px solid ${C.gold}`, outline: 'none', fontSize: 14, color: C.cocoa, background: 'rgba(189,155,63,0.06)', fontWeight: 600 }} />
             </div>
           </div>
 
@@ -1909,12 +2021,12 @@ const SisaKuApp = () => {
           <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
             {windows.map((w) => {
               const on = mForm.window === w;
-              return <button key={w} onClick={() => setMForm({ ...mForm, window: w })} className="sk-press" style={{ flex: 1, padding: '11px 6px', borderRadius: 12, border: on ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: on ? 'rgba(200,161,58,0.06)' : '#fff', color: C.cocoa, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{w}</button>;
+              return <button key={w} onClick={() => setMForm({ ...mForm, window: w })} className="sk-press" style={{ flex: 1, padding: '11px 6px', borderRadius: 12, border: on ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: on ? 'rgba(189,155,63,0.06)' : '#fff', color: C.cocoa, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{w}</button>;
             })}
           </div>
 
           {/* Earnings preview */}
-          <div style={{ padding: 14, borderRadius: 16, background: 'rgba(107,125,94,0.1)', marginBottom: 8 }}>
+          <div style={{ padding: 14, borderRadius: 16, background: 'rgba(62,124,83,0.1)', marginBottom: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
               <span style={{ color: C.sage }}>You earn per bag (after 15%)</span>
               <span style={{ fontWeight: 700, color: C.sage }}>{idr(mForm.price * 0.85)}</span>
@@ -1942,7 +2054,7 @@ const SisaKuApp = () => {
           return (
             <div key={o.id} className="sk-fadeup" style={{ borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}`, marginBottom: 14, overflow: 'hidden' }}>
               <div style={{ display: 'flex', gap: 12, padding: 14, alignItems: 'center' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: awaiting ? 'rgba(200,161,58,0.12)' : 'rgba(107,125,94,0.12)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: awaiting ? 'rgba(189,155,63,0.12)' : 'rgba(62,124,83,0.12)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                   {awaiting ? <Clock size={18} color="#9c7a1f" /> : <Check size={18} color={C.sage} />}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1989,7 +2101,7 @@ const SisaKuApp = () => {
 
         {/* Result */}
         {scanResult && (
-          <div className="sk-scalein" style={{ width: '100%', maxWidth: 320, marginTop: 24, padding: 20, borderRadius: 18, background: scanResult.ok ? 'rgba(107,125,94,0.12)' : 'rgba(168,83,74,0.1)', border: `1px solid ${scanResult.ok ? 'rgba(107,125,94,0.3)' : 'rgba(168,83,74,0.3)'}`, textAlign: 'center' }}>
+          <div className="sk-scalein" style={{ width: '100%', maxWidth: 320, marginTop: 24, padding: 20, borderRadius: 18, background: scanResult.ok ? 'rgba(62,124,83,0.12)' : 'rgba(209,74,63,0.1)', border: `1px solid ${scanResult.ok ? 'rgba(62,124,83,0.3)' : 'rgba(209,74,63,0.3)'}`, textAlign: 'center' }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: scanResult.ok ? C.sage : C.danger, display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
               {scanResult.ok ? <Check size={30} color="#fff" strokeWidth={3} /> : <X size={30} color="#fff" strokeWidth={3} />}
             </div>
@@ -2113,16 +2225,16 @@ const SisaKuApp = () => {
           </div>
         </div>
 
-        <div style={{ position: 'relative', width: 390, height: 800, borderRadius: 56, padding: 12, background: 'linear-gradient(145deg, #5a5a5e 0%, #2c2c2f 40%, #1a1a1d 100%)', boxShadow: '0 50px 100px rgba(20,18,15,0.4), inset 0 1px 1px rgba(255,255,255,0.25), inset 0 0 0 1.5px rgba(255,255,255,0.08)' }}>
-          <div style={{ position: 'absolute', top: 22, left: '50%', transform: 'translateX(-50%)', width: 120, height: 28, borderRadius: 999, background: C.espresso, zIndex: 100 }} />
-          <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 46, overflow: 'hidden', background: '#f7f6f3' }}>
+        <div style={{ position: 'relative', width: 393, height: 852, borderRadius: 56, padding: 11, background: 'linear-gradient(145deg, #5a5a5e 0%, #2c2c2f 40%, #1a1a1d 100%)', boxShadow: '0 50px 100px rgba(20,18,15,0.4), inset 0 1px 1px rgba(255,255,255,0.25), inset 0 0 0 1.5px rgba(255,255,255,0.08)' }}>
+          <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', width: 124, height: 36, borderRadius: 999, background: '#000', zIndex: 100 }} />
+          <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 47, overflow: 'hidden', background: '#f7f6f3' }}>
             {phoneContent}
           </div>
         </div>
       </div>
 
-      {/* Mobile: true fullscreen */}
-      <div className="md:hidden sk-root" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: C.cream }}>
+      {/* Mobile: true fullscreen, fits every phone edge-to-edge */}
+      <div className="md:hidden sk-root sk-safe-bottom" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
         {phoneContent}
       </div>
     </>
