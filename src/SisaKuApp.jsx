@@ -96,7 +96,7 @@ const GLOBAL_CSS = `
   }
   .sk-noscroll::-webkit-scrollbar { display: none; }
   .sk-noscroll { -ms-overflow-style: none; scrollbar-width: none; overscroll-behavior: contain; }
-  html, body { overscroll-behavior: none; background: #f7f6f3; }
+  html, body { overscroll-behavior: none; background: #f7f6f3; height: 100dvh; margin: 0; overflow: hidden; }
   .sk-safe-top { padding-top: env(safe-area-inset-top, 0px); }
   .sk-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .sk-press { transition: transform 0.22s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease; }
@@ -2538,17 +2538,25 @@ const SisaKuApp = () => {
     }
   };
 
+  // Soft gradient that fills the screen bottom behind the floating dock,
+  // so there is never a bare strip ("band") below the content / pill.
+  const bottomScrim = (
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, zIndex: 25, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(247,246,243,0) 0%, rgba(247,246,243,0.85) 55%, #f7f6f3 100%)' }} />
+  );
+
   const phoneContent = (
     <div className="sk-root" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), radial-gradient(700px 520px at 50% 115%, rgba(189,155,63,0.08), transparent 55%), #f7f6f3' }}>
       {role === 'merchant' ? (
         <>
           <div key={mScreen} className="sk-fade" style={{ position: 'absolute', inset: 0 }}>{renderMerchantScreen()}</div>
+          {mScreen !== 'mCreate' && bottomScrim}
           {mScreen !== 'mCreate' && renderMNav()}
           {toast && renderToast()}
         </>
       ) : (
         <>
           <div key={screen} className="sk-fade" style={{ position: 'absolute', inset: 0 }}>{renderScreen()}</div>
+          {['home', 'map', 'orders', 'profile'].includes(screen) && bottomScrim}
           {renderBottomNav()}
           {showFilters && renderFilters()}
           {activeOrderDetail && renderOrderDetail()}
@@ -2590,7 +2598,7 @@ const SisaKuApp = () => {
       </div>
 
       {/* Mobile: true fullscreen, fits every phone edge-to-edge */}
-      <div className="md:hidden sk-root" style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
+      <div className="md:hidden sk-root" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
         {phoneContent}
       </div>
     </>
