@@ -90,7 +90,8 @@ const GLOBAL_CSS = `
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   }
   .sk-noscroll::-webkit-scrollbar { display: none; }
-  .sk-noscroll { -ms-overflow-style: none; scrollbar-width: none; }
+  .sk-noscroll { -ms-overflow-style: none; scrollbar-width: none; overscroll-behavior: contain; }
+  html, body { overscroll-behavior: none; }
   .sk-safe-top { padding-top: env(safe-area-inset-top, 0px); }
   .sk-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .sk-press { transition: transform 0.22s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease; }
@@ -260,10 +261,10 @@ const store = {
     try {
       const raw = window.localStorage.getItem('sisaku:' + key);
       return raw == null ? fallback : JSON.parse(raw);
-    } catch { return fallback; }
+    } catch (e) { return fallback; }
   },
   set(key, value) {
-    try { window.localStorage.setItem('sisaku:' + key, JSON.stringify(value)); } catch {}
+    try { window.localStorage.setItem('sisaku:' + key, JSON.stringify(value)); } catch (e) {}
   },
 };
 
@@ -465,7 +466,7 @@ const LeafletMap = ({ bags, selectedId, onSelect, gold, goldLight }) => {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19, crossOrigin: true,
       }).addTo(map);
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      // zoom control removed — pinch / double-tap still works, and the white buttons collided with the dock
       mapRef.current = map;
 
       bags.forEach((b) => {
@@ -483,9 +484,9 @@ const LeafletMap = ({ bags, selectedId, onSelect, gold, goldLight }) => {
       setReady(true);
       // Fire invalidateSize repeatedly — the map div often has no height at first
       // paint inside the phone shell, which leaves tiles unrendered (blank canvas).
-      [60, 250, 600, 1200].forEach((d) => setTimeout(() => { try { map.invalidateSize(); } catch {} }, d));
+      [60, 250, 600, 1200].forEach((d) => setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, d));
     });
-    return () => { cancelled = true; if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
+    return () => { cancelled = true; if (mapRef.current) { try { mapRef.current.remove(); } catch (e) {} mapRef.current = null; } };
   }, []); // eslint-disable-line
 
   // update marker highlight + recentre on selection
@@ -505,7 +506,7 @@ const LeafletMap = ({ bags, selectedId, onSelect, gold, goldLight }) => {
   }, [selectedId]); // eslint-disable-line
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 0, isolation: 'isolate' }}>
       <div ref={elRef} style={{ position: 'absolute', inset: 0, background: '#e8dcc6' }} />
       {!ready && (
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: '#e8dcc6' }}>
@@ -622,6 +623,36 @@ const SisaKuApp = () => {
   const [scanCode, setScanCode] = useState('');
   const [scanResult, setScanResult] = useState(null);
 
+  /* ---- merchant toolbar shrink-on-scroll (mirrors consumer) ---- */
+  const [mNavShrunk, setMNavShrunk] = useState(false);
+  const mLastScrollY = useRef(0);
+  const mNavWrapRef = useRef(null);
+  const [mNavFullW, setMNavFullW] = useState(0);
+  useEffect(() => {
+    const measure = () => {
+      if (mNavWrapRef.current) {
+        const w = mNavWrapRef.current.clientWidth - 32;
+        if (w > 0) setMNavFullW(w);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [mScreen]);
+  const mHandleScroll = (e) => {
+    const y = e.currentTarget.scrollTop;
+    const last = mLastScrollY.current;
+    const delta = y - last;
+    if (y < 40) {
+      if (mNavShrunk) setMNavShrunk(false);
+    } else if (delta > 10) {
+      if (!mNavShrunk) setMNavShrunk(true);
+    } else if (delta < -10) {
+      if (mNavShrunk) setMNavShrunk(false);
+    }
+    if (Math.abs(delta) > 4) mLastScrollY.current = y;
+  };
+
   /* ---- merchant derived + handlers ---- */
   const mActiveListings = mListings.filter((l) => l.active);
   const mBagsListedToday = mListings.reduce((s, l) => s + l.qty, 0);
@@ -631,7 +662,7 @@ const SisaKuApp = () => {
   const mCommissionRate = 0.15;
   const mNetToday = Math.round(mRevenueToday * (1 - mCommissionRate));
 
-  const mGo = (s) => setMScreen(s);
+  const mGo = (s) => { setMScreen(s); setMNavShrunk(false); mLastScrollY.current = 0; };
 
   const mPublishListing = () => {
     if (!mForm.title.trim()) { setToast({ icon: '\u26A0\uFE0F', text: 'Add a title for your bag' }); return; }
@@ -676,7 +707,7 @@ const SisaKuApp = () => {
     const el = document.createElement('style');
     el.innerText = GLOBAL_CSS;
     document.head.appendChild(el);
-    return () => { document.head.removeChild(el); };
+    return () => { try { if (el.parentNode) el.parentNode.removeChild(el); } catch (e) {} };
   }, []);
 
   /* ---- splash auto-advance ---- */
@@ -1234,7 +1265,7 @@ const SisaKuApp = () => {
       <div style={{ position: 'absolute', inset: 0, background: C.cream, overflow: 'hidden' }}>
         <LeafletMap bags={BAGS} selectedId={sel ? sel.id : null} onSelect={(b) => setMapSelected(b)} gold={C.gold} goldLight={C.goldLight} />
 
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '52px 16px 0', display: 'flex', gap: 10 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '52px 16px 0', display: 'flex', gap: 10, zIndex: 10 }}>
           <button onClick={() => go('home')} className="sk-press sk-glass-strong" style={{ width: 44, height: 44, borderRadius: 999, border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <ChevronLeft size={22} color={C.cocoa} />
           </button>
@@ -1866,7 +1897,7 @@ const SisaKuApp = () => {
   const renderMDash = () => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {mTopBar('Sourdough Project', 'Good evening — let\u2019s rescue tonight')}
-      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
+      <div className="sk-noscroll" onScroll={mHandleScroll} style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
         {/* Today snapshot */}
         <div className="sk-fadeup" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={mBagsSoldToday + '/' + mBagsListedToday} label="Bags sold today" tint="rgba(189,155,63,0.1)" />
@@ -1929,7 +1960,7 @@ const SisaKuApp = () => {
   const renderMListings = () => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {mTopBar('My listings', 'Manage tonight\u2019s surprise bags')}
-      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
+      <div className="sk-noscroll" onScroll={mHandleScroll} style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
         <button onClick={() => mGo('mCreate')} className="sk-press" style={{ width: '100%', padding: 14, borderRadius: 16, border: `2px dashed ${C.sand}`, background: '#fff', color: C.mocha, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
           <Plus size={18} /> New surprise bag
         </button>
@@ -2048,7 +2079,7 @@ const SisaKuApp = () => {
   const renderMOrders = () => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {mTopBar('Orders', 'Today\u2019s reservations')}
-      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
+      <div className="sk-noscroll" onScroll={mHandleScroll} style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 100px' }}>
         {mOrders.map((o) => {
           const awaiting = o.status === 'awaiting';
           return (
@@ -2132,17 +2163,17 @@ const SisaKuApp = () => {
   ];
 
   const renderMNav = () => (
-    <div style={{ position: 'absolute', bottom: 22, left: 16, right: 16, zIndex: 30 }}>
-      <div className="sk-glass-strong" style={{ display: 'flex', padding: 6, borderRadius: 999 }}>
+    <div ref={mNavWrapRef} style={{ position: 'absolute', bottom: 22, left: 0, right: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}>
+      <div className="sk-glass-strong" style={{ display: 'flex', padding: 6, borderRadius: 999, width: mNavShrunk ? (M_NAV.length * 46 + 12) : (mNavFullW > 0 ? mNavFullW : '100%'), overflow: 'hidden', pointerEvents: 'auto', willChange: 'width', transition: 'width 0.5s cubic-bezier(0.32,0.72,0,1)' }}>
         {M_NAV.map((item) => {
           const on = mScreen === item.id;
           const Icon = item.icon;
           return (
-            <button key={item.id} onClick={() => { setScanResult(null); mGo(item.id); }} className="sk-press" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, border: 'none', background: on ? 'rgba(189,155,63,0.16)' : 'transparent', borderRadius: 999, padding: '9px 0 7px', cursor: 'pointer', position: 'relative', transition: 'background 0.3s cubic-bezier(0.32,0.72,0,1)' }}>
+            <button key={item.id} onClick={() => { setScanResult(null); mGo(item.id); }} className="sk-press" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 46, border: 'none', background: on ? 'rgba(189,155,63,0.16)' : 'transparent', borderRadius: 999, cursor: 'pointer', position: 'relative', transition: 'background 0.4s cubic-bezier(0.32,0.72,0,1)' }}>
               <Icon size={21} color={on ? C.caramel : C.latte} strokeWidth={on ? 2.4 : 1.9} />
-              <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? C.cocoa : C.latte, letterSpacing: '-0.01em' }}>{item.label}</span>
+              <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? C.cocoa : C.latte, letterSpacing: '-0.01em', maxHeight: mNavShrunk ? 0 : 13, opacity: mNavShrunk ? 0 : 1, overflow: 'hidden', whiteSpace: 'nowrap', willChange: 'max-height, opacity', transition: 'max-height 0.5s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease' }}>{item.label}</span>
               {item.id === 'mScan' && mPendingPickups > 0 && (
-                <span style={{ position: 'absolute', top: 4, right: '50%', marginRight: -18, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>{mPendingPickups}</span>
+                <span style={{ position: 'absolute', top: 3, right: mNavShrunk ? 8 : '50%', marginRight: mNavShrunk ? 0 : -18, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'right 0.5s cubic-bezier(0.32,0.72,0,1), margin-right 0.5s cubic-bezier(0.32,0.72,0,1)' }}>{mPendingPickups}</span>
               )}
             </button>
           );
