@@ -51,6 +51,11 @@ const GLOBAL_CSS = `
   @keyframes skBar { from { width: 0; } }
   @keyframes skSpin { to { transform: rotate(360deg); } }
 
+  @keyframes skSpawn { 0% { opacity: 0; transform: scale(0.15) translateY(18px); filter: blur(16px); } 55% { opacity: 1; transform: scale(1.12) translateY(-5px); filter: blur(0); } 75% { transform: scale(0.96) translateY(0); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
+  @keyframes skRingOut { 0% { opacity: 0.8; transform: scale(0.3); } 100% { opacity: 0; transform: scale(2.2); } }
+  @keyframes skSparkIn { 0% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); } 35% { opacity: 1; } 100% { opacity: 0; transform: translate(0, 0) scale(1.1); } }
+  @keyframes skGlow { 0%, 100% { box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 rgba(232,204,116,0); } 50% { box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 44px rgba(232,204,116,0.45); } }
+  .sk-spawn { animation: skSpawn 1s cubic-bezier(0.34,1.3,0.64,1) 0.25s both, skGlow 2.6s ease-in-out 1.3s infinite; }
   .sk-fadeup { animation: skFadeUp 0.55s cubic-bezier(0.32,0.72,0,1) both; }
   .sk-fade { animation: skFade 0.4s cubic-bezier(0.32,0.72,0,1) both; }
   .sk-scalein { animation: skScaleIn 0.45s cubic-bezier(0.32,0.72,0,1) both; }
@@ -767,7 +772,7 @@ const SisaKuApp = () => {
   /* ---- splash auto-advance ---- */
   useEffect(() => {
     if (screen === 'splash') {
-      const t = setTimeout(() => setScreen('onboarding'), 2200);
+      const t = setTimeout(() => setScreen('onboarding'), 3000);
       return () => clearTimeout(t);
     }
   }, [screen]);
@@ -890,16 +895,26 @@ const SisaKuApp = () => {
   /* ======================= SPLASH ======================= */
   const renderSplash = () => (
     <div className="sk-grain" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(130% 100% at 50% 0%, ${C.coffee} 0%, ${C.cocoa} 55%, ${C.espresso} 100%)` }}>
-      <div className="sk-pop" style={{ width: 96, height: 96, borderRadius: 28, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center', boxShadow: '0 16px 40px rgba(0,0,0,0.4)', marginBottom: 26 }}>
-        <ShoppingBag size={46} color={C.espresso} strokeWidth={1.6} />
+      <div style={{ position: 'relative', width: 96, height: 96, marginBottom: 26 }}>
+        {[0, 1].map((i) => (
+          <span key={'r' + i} style={{ position: 'absolute', inset: -6, borderRadius: 999, border: `1.5px solid ${C.goldLight}`, animation: `skRingOut 1.2s cubic-bezier(0.32,0.72,0,1) ${0.35 + i * 0.25}s both`, pointerEvents: 'none' }} />
+        ))}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+          const ang = (i / 8) * Math.PI * 2;
+          const r = 78 + (i % 2) * 22;
+          return <span key={'s' + i} style={{ position: 'absolute', left: '50%', top: '50%', width: i % 2 ? 5 : 7, height: i % 2 ? 5 : 7, marginLeft: -3, marginTop: -3, borderRadius: 999, background: i % 3 ? C.goldLight : C.gold, '--dx': Math.round(Math.cos(ang) * r) + 'px', '--dy': Math.round(Math.sin(ang) * r) + 'px', animation: `skSparkIn 0.9s cubic-bezier(0.32,0.72,0,1) ${0.08 + i * 0.05}s both`, pointerEvents: 'none' }} />;
+        })}
+        <div className="sk-spawn" style={{ width: 96, height: 96, borderRadius: 28, background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`, display: 'grid', placeItems: 'center' }}>
+          <ShoppingBag size={46} color={C.espresso} strokeWidth={1.6} />
+        </div>
       </div>
-      <div className="sk-fadeup" style={{ animationDelay: '0.25s' }}>
+      <div className="sk-fadeup" style={{ animationDelay: '0.85s' }}>
         <div className="sk-display sk-gold-text" style={{ fontSize: 44, fontWeight: 600, letterSpacing: '-0.01em', textAlign: 'center' }}>SisaKu</div>
       </div>
-      <div className="sk-fadeup sk-serif" style={{ animationDelay: '0.45s', color: C.sand, fontSize: 19, fontStyle: 'italic', marginTop: 4 }}>
+      <div className="sk-fadeup sk-serif" style={{ animationDelay: '1.05s', color: C.sand, fontSize: 19, fontStyle: 'italic', marginTop: 4 }}>
         Selamatkan Sisa, Nikmati Lebih
       </div>
-      <div className="sk-fade" style={{ animationDelay: '1.2s', position: 'absolute', bottom: 60, display: 'flex', gap: 6 }}>
+      <div className="sk-fade" style={{ animationDelay: '1.7s', position: 'absolute', bottom: 60, display: 'flex', gap: 6 }}>
         {[0, 1, 2].map((i) => (
           <span key={i} style={{ width: 7, height: 7, borderRadius: 999, background: C.gold, animation: `skPulse 1.2s ${i * 0.2}s infinite` }} />
         ))}
@@ -1655,7 +1670,7 @@ const SisaKuApp = () => {
             <div className="sk-fadeup" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={stats.rescued} label="Bags rescued" tint="rgba(189,155,63,0.1)" />
               <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(stats.saved)} label="Total saved" tint="rgba(62,124,83,0.1)" />
-              <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={stats.co2 + ' kg'} label="CO\u2082 prevented" tint="rgba(62,124,83,0.1)" />
+              <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={stats.co2 + ' kg'} label="CO₂ prevented" tint="rgba(62,124,83,0.1)" />
               <ImpactCard icon={<Sparkles size={18} color={C.caramel} />} value={stats.meals} label="Meals saved" tint="rgba(139,101,72,0.1)" />
             </div>
 
@@ -2088,7 +2103,7 @@ const SisaKuApp = () => {
           <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={mBagsSoldToday + '/' + mBagsListedToday} label="Bags sold today" tint="rgba(189,155,63,0.1)" />
           <ImpactCard icon={<Wallet size={18} color={C.sage} />} value={idr(mNetToday)} label="Net earnings today" tint="rgba(62,124,83,0.1)" />
           <ImpactCard icon={<Clock size={18} color={C.caramel} />} value={mPendingPickups} label="Pickups pending" tint="rgba(139,101,72,0.1)" />
-          <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={(mBagsSoldToday * 1.3).toFixed(1) + 'kg'} label="CO\u2082 saved today" tint="rgba(62,124,83,0.1)" />
+          <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={(mBagsSoldToday * 1.3).toFixed(1) + 'kg'} label="CO₂ saved today" tint="rgba(62,124,83,0.1)" />
         </div>
 
         {/* Earnings explainer */}
@@ -2575,7 +2590,7 @@ const SisaKuApp = () => {
       </div>
 
       {/* Mobile: true fullscreen, fits every phone edge-to-edge */}
-      <div className="md:hidden sk-root" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
+      <div className="md:hidden sk-root" style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
         {phoneContent}
       </div>
     </>
