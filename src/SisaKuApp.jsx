@@ -91,7 +91,7 @@ const GLOBAL_CSS = `
   }
   .sk-noscroll::-webkit-scrollbar { display: none; }
   .sk-noscroll { -ms-overflow-style: none; scrollbar-width: none; overscroll-behavior: contain; }
-  html, body { overscroll-behavior: none; }
+  html, body { overscroll-behavior: none; background: #f7f6f3; }
   .sk-safe-top { padding-top: env(safe-area-inset-top, 0px); }
   .sk-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .sk-press { transition: transform 0.22s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease; }
@@ -252,6 +252,58 @@ const PROMOS = {
 };
 
 /* ---------- PURE HELPERS ---------- */
+const greetingFor = (h) => {
+  if (h < 5)  return { text: 'Good night',     emoji: '\u{1F319}', sub: 'Late-night rescue?' };
+  if (h < 11) return { text: 'Good morning',   emoji: '\u2600\uFE0F', sub: 'What shall we rescue today?' };
+  if (h < 17) return { text: 'Good afternoon', emoji: '\u{1F324}\uFE0F', sub: 'What shall we rescue today?' };
+  if (h < 21) return { text: 'Good evening',   emoji: '\u{1F306}', sub: 'What shall we rescue tonight?' };
+  return       { text: 'Good night',     emoji: '\u{1F319}', sub: 'One last rescue before close?' };
+};
+// Deterministic daily sales history for the demo merchant (joined ~17 months ago).
+// Seeded pseudo-random + growth trend + weekend lift, so numbers are stable across renders.
+const M_HISTORY = (() => {
+  const days = 520;
+  const out = [];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (let i = days; i >= 1; i--) {
+    const d = new Date(today.getTime() - i * 86400000);
+    const seed = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const growth = 6 + ((days - i) / days) * 10;           // ramps 6 -> 16 bags/day
+    const weekend = (d.getDay() === 5 || d.getDay() === 6) ? 4 : 0;
+    const bags = Math.max(2, Math.round(growth + weekend + (seed - 0.5) * 6));
+    const avgPrice = 36000 + Math.round(seed * 8000);
+    out.push({ t: d.getTime(), bags, gross: bags * avgPrice });
+  }
+  return out;
+})();
+const mSumSince = (sinceMs) => M_HISTORY.reduce((acc, d) => d.t >= sinceMs ? { bags: acc.bags + d.bags, gross: acc.gross + d.gross } : acc, { bags: 0, gross: 0 });
+const MERCHANT_TIERS = [
+  { level: 1, name: 'Bronze Partner',   min: 0,    commission: 15 },
+  { level: 2, name: 'Silver Partner',   min: 1500, commission: 14 },
+  { level: 3, name: 'Gold Partner',     min: 4000, commission: 13 },
+  { level: 4, name: 'Platinum Partner', min: 8000, commission: 12 },
+  { level: 5, name: 'Diamond Partner',  min: 15000, commission: 10 },
+];
+const mTierFor = (bags) => {
+  let t = MERCHANT_TIERS[0];
+  MERCHANT_TIERS.forEach((x) => { if (bags >= x.min) t = x; });
+  const next = MERCHANT_TIERS.find((x) => x.min > bags) || null;
+  return { ...t, next, toNext: next ? next.min - bags : 0, pct: next ? Math.min(100, Math.round(((bags - t.min) / (next.min - t.min)) * 100)) : 100 };
+};
+
+const LOYALTY_TIERS = [
+  { level: 1, name: 'Pemula',        min: 0,  perk: 'Welcome to the rescue' },
+  { level: 2, name: 'Food Hero',     min: 5,  perk: 'Early access to drops' },
+  { level: 3, name: 'Food Guardian', min: 12, perk: 'Free service fees' },
+  { level: 4, name: 'Penyelamat',    min: 25, perk: 'Priority reservations' },
+  { level: 5, name: 'Rescue Legend', min: 50, perk: 'Exclusive merchant tastings' },
+];
+const tierFor = (count) => {
+  let t = LOYALTY_TIERS[0];
+  LOYALTY_TIERS.forEach((x) => { if (count >= x.min) t = x; });
+  const next = LOYALTY_TIERS.find((x) => x.min > count) || null;
+  return { ...t, next, toNext: next ? next.min - count : 0, pct: next ? Math.min(100, Math.round(((count - t.min) / (next.min - t.min)) * 100)) : 100 };
+};
 const idr = (n) => 'Rp\u202f' + new Intl.NumberFormat('id-ID').format(Math.round(n));
 
 // Bulletproof persistence — silently no-ops where storage is unavailable
@@ -535,7 +587,8 @@ const SisaKuApp = () => {
 
   /* ---- checkout ---- */
   const [qty, setQty] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('gopay');
+  const [paymentMethod, setPaymentMethod] = useState(() => store.get('defaultPay', 'gopay'));
+  const [dietaryPrefs, setDietaryPrefs] = useState(() => store.get('dietaryPrefs', []));
   const [promoInput, setPromoInput] = useState('');
   const [promoApplied, setPromoApplied] = useState(null);
   const [promoError, setPromoError] = useState('');
@@ -621,6 +674,7 @@ const SisaKuApp = () => {
   ]);
   const [mForm, setMForm] = useState({ title: '', qty: 5, price: 38000, original: 95000, window: '18:00 – 20:00' });
   const [scanCode, setScanCode] = useState('');
+  const [mEarnPeriod, setMEarnPeriod] = useState('W');
   const [scanResult, setScanResult] = useState(null);
 
   /* ---- merchant toolbar shrink-on-scroll (mirrors consumer) ---- */
@@ -738,6 +792,8 @@ const SisaKuApp = () => {
   /* ---- persist favorites & merchant listings ---- */
   useEffect(() => { store.set('favorites', favorites); }, [favorites]);
   useEffect(() => { store.set('mListings', mListings); }, [mListings]);
+  useEffect(() => { store.set('defaultPay', paymentMethod); }, [paymentMethod]);
+  useEffect(() => { store.set('dietaryPrefs', dietaryPrefs); }, [dietaryPrefs]);
 
   /* ---- derived ---- */
   const isFav = (id) => favorites.includes(id);
@@ -982,8 +1038,8 @@ const SisaKuApp = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: C.latte, fontSize: 12.5, fontWeight: 500 }}>
                 <MapPin size={13} /> Kemang · Jakarta Selatan
               </div>
-              <div className="sk-display" style={{ fontSize: 32, fontWeight: 700, color: C.cocoa, marginTop: 6, lineHeight: 1.05, letterSpacing: '-0.03em' }}>Good evening 🌙</div>
-              <div style={{ fontSize: 14.5, color: C.latte, marginTop: 4 }}>What shall we rescue tonight?</div>
+              <div className="sk-display" style={{ fontSize: 32, fontWeight: 700, color: C.cocoa, marginTop: 6, lineHeight: 1.05, letterSpacing: '-0.03em' }}>{greetingFor(now.getHours()).text} {greetingFor(now.getHours()).emoji}</div>
+              <div style={{ fontSize: 14.5, color: C.latte, marginTop: 4 }}>{greetingFor(now.getHours()).sub}</div>
             </div>
             <button onClick={() => go('notifications')} className="sk-press sk-glass" style={{ position: 'relative', width: 42, height: 42, borderRadius: 999, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
               <Bell size={19} color={C.cocoa} />
@@ -1119,7 +1175,7 @@ const SisaKuApp = () => {
 
             {bag.dietary.length > 0 && (
               <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                {bag.dietary.map((d) => <Pill key={d} bg={C.parchment} color={C.mocha}><Check size={11} /> {d}</Pill>)}
+                {bag.dietary.map((d) => { const match = dietaryPrefs.includes(d); return <Pill key={d} bg={match ? 'rgba(189,155,63,0.16)' : C.parchment} color={match ? '#9c7a1f' : C.mocha}><Check size={11} /> {d}{match ? ' · your pref' : ''}</Pill>; })}
               </div>
             )}
 
@@ -1580,8 +1636,7 @@ const SisaKuApp = () => {
     const weekly = [2, 1, 3, 2, 4, 3, 5];
     const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     const maxW = Math.max(...weekly);
-    const nextTier = 20;
-    const progress = Math.min(100, (stats.rescued / nextTier) * 100);
+    const tier = tierFor(stats.rescued);
     return (
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
         <div className="sk-noscroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
@@ -1591,7 +1646,7 @@ const SisaKuApp = () => {
               <div>
                 <div className="sk-display" style={{ fontSize: 26, fontWeight: 700, color: C.cocoa, letterSpacing: '-0.02em' }}>Arthur</div>
                 <div style={{ fontSize: 13, color: C.latte, marginTop: 1 }}>arthur@binus.ac.id</div>
-                <Pill bg="rgba(189,155,63,0.14)" color={C.caramel} style={{ marginTop: 6 }}><Award size={11} /> Food Hero · Level 2</Pill>
+                <Pill bg="rgba(189,155,63,0.14)" color={C.caramel} style={{ marginTop: 6 }}><Award size={11} /> {tierFor(stats.rescued).name} · Level {tierFor(stats.rescued).level}</Pill>
               </div>
             </div>
           </div>
@@ -1607,14 +1662,21 @@ const SisaKuApp = () => {
             <div className="sk-fadeup" style={{ marginTop: 16, padding: 18, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: C.cocoa }}>Progress to Level 3</div>
-                  <div style={{ fontSize: 11.5, color: C.latte }}>{nextTier - stats.rescued} more rescues to “Food Guardian”</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: C.cocoa }}>{tier.next ? 'Progress to Level ' + tier.next.level : 'Top tier reached'}</div>
+                  <div style={{ fontSize: 11.5, color: C.latte }}>{tier.next ? tier.toNext + ' more rescue' + (tier.toNext === 1 ? '' : 's') + ' to “' + tier.next.name + '”' : 'You are a Rescue Legend 👑'}</div>
                 </div>
                 <Award size={26} color={C.gold} />
               </div>
               <div style={{ height: 10, borderRadius: 999, background: C.parchment, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progress}%`, borderRadius: 999, background: `linear-gradient(90deg, ${C.gold}, ${C.goldLight})`, animation: 'skBar 1s ease' }} />
+                <div style={{ height: '100%', width: `${tier.pct}%`, borderRadius: 999, background: `linear-gradient(90deg, ${C.gold}, ${C.goldLight})`, animation: 'skBar 1s ease' }} />
               </div>
+              <div className="sk-noscroll" style={{ display: 'flex', gap: 6, marginTop: 12, overflowX: 'auto' }}>
+                {LOYALTY_TIERS.map((t) => {
+                  const unlocked = stats.rescued >= t.min;
+                  return <div key={t.level} style={{ flexShrink: 0, padding: '6px 10px', borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: unlocked ? 'rgba(189,155,63,0.15)' : C.parchment, color: unlocked ? '#9c7a1f' : C.latte }}>{unlocked ? '✓ ' : ''}L{t.level} {t.name}</div>;
+                })}
+              </div>
+              {tier.next && <div style={{ fontSize: 11.5, color: C.sage, marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}><Sparkles size={12} /> Next perk: {tier.next.perk}</div>}
             </div>
 
             <div className="sk-fadeup" style={{ marginTop: 16, padding: 18, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
@@ -1635,11 +1697,11 @@ const SisaKuApp = () => {
             <div className="sk-fadeup" style={{ marginTop: 16, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}`, overflow: 'hidden' }}>
               {[
                 { icon: <Gift size={17} color={C.gold} />, label: 'Invite & earn', badge: 0, go: 'referral' },
-                { icon: <Heart size={17} color={C.mocha} />, label: 'Favourite merchants', badge: favorites.length },
-                { icon: <Wallet size={17} color={C.mocha} />, label: 'Payment methods', badge: 0 },
+                { icon: <Heart size={17} color={C.mocha} />, label: 'Favourite merchants', badge: favorites.length, go: 'favorites' },
+                { icon: <Wallet size={17} color={C.mocha} />, label: 'Payment methods', badge: 0, go: 'payments' },
                 { icon: <Bell size={17} color={C.mocha} />, label: 'Notifications', badge: unreadCount, go: 'notifications' },
-                { icon: <Leaf size={17} color={C.mocha} />, label: 'Dietary preferences', badge: 0 },
-                { icon: <ShieldCheck size={17} color={C.mocha} />, label: 'Help & support', badge: 0 },
+                { icon: <Leaf size={17} color={C.mocha} />, label: 'Dietary preferences', badge: dietaryPrefs.length, go: 'dietary' },
+                { icon: <ShieldCheck size={17} color={C.mocha} />, label: 'Help & support', badge: 0, go: 'help' },
               ].map((item, i, arr) => (
                 <button key={i} onClick={() => item.go ? go(item.go) : setToast({ icon: '\u2699\uFE0F', text: item.label })} className="sk-press" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 13, padding: '15px 18px', border: 'none', borderBottom: i < arr.length - 1 ? `1px solid ${C.parchment}` : 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
                   {item.icon}
@@ -1811,6 +1873,129 @@ const SisaKuApp = () => {
     );
   };
 
+  /* ======================= FAVORITES ======================= */
+  const renderFavorites = () => {
+    const favBags = BAGS.filter((b) => favorites.includes(b.id));
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        <TopBar title="Favourite merchants" onBack={() => go('profile')} />
+        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 40px' }}>
+          {favBags.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <div style={{ fontSize: 52, marginBottom: 12 }}>🤍</div>
+              <div className="sk-display" style={{ fontSize: 18, fontWeight: 700, color: C.cocoa }}>No favourites yet</div>
+              <div style={{ fontSize: 13.5, color: C.latte, marginTop: 6 }}>Tap the heart on any merchant to save them here.</div>
+            </div>
+          ) : favBags.map((b) => (
+            <div key={b.id} className="sk-card" style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 20, background: '#fff', border: `1px solid ${C.parchment}`, marginBottom: 12, cursor: 'pointer' }} onClick={() => openBag(b)}>
+              <div style={{ width: 62, height: 62, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}><BagImage bag={b} h={62} /></div>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div className="sk-display" style={{ fontSize: 15.5, fontWeight: 700, color: C.cocoa, letterSpacing: '-0.01em' }}>{b.merchant}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: C.latte, marginTop: 3 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><Star size={11} fill={C.gold} color={C.gold} /> {b.rating}</span>
+                  <span>{b.type}</span><span>· {b.area}</span>
+                </div>
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); setFavorites((p) => p.filter((id) => id !== b.id)); setToast({ icon: '💔', text: 'Removed from favourites' }); }} className="sk-press" style={{ alignSelf: 'center', width: 38, height: 38, borderRadius: 999, border: 'none', background: 'rgba(209,74,63,0.1)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                <Heart size={17} fill={C.danger} color={C.danger} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  /* ======================= PAYMENT METHODS ======================= */
+  const renderPayments = () => (
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+      <TopBar title="Payment methods" onBack={() => go('profile')} />
+      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 40px' }}>
+        <div style={{ fontSize: 12.5, color: C.latte, marginBottom: 12 }}>Your default is pre-selected at checkout.</div>
+        {PAYMENTS.map((p) => {
+          const isDefault = paymentMethod === p.id;
+          return (
+            <button key={p.id} onClick={() => { setPaymentMethod(p.id); setToast({ icon: '✓', text: p.name + ' set as default' }); }} className="sk-press" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 13, padding: 16, borderRadius: 18, border: isDefault ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: isDefault ? 'rgba(189,155,63,0.06)' : '#fff', marginBottom: 10, cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 24 }}>{p.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 600, color: C.cocoa }}>{p.name}</div>
+                <div style={{ fontSize: 11.5, color: C.latte }}>{p.balance}</div>
+              </div>
+              {isDefault && <Pill bg="rgba(189,155,63,0.16)" color="#9c7a1f">Default</Pill>}
+            </button>
+          );
+        })}
+        <button onClick={() => setToast({ icon: '💳', text: 'Card support coming soon' })} className="sk-press" style={{ width: '100%', padding: 15, borderRadius: 18, border: `2px dashed ${C.sand}`, background: 'transparent', color: C.mocha, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 6 }}>
+          <Plus size={16} /> Add debit / credit card
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ======================= DIETARY PREFERENCES ======================= */
+  const renderDietary = () => {
+    const OPTIONS = ['Halal', 'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Nut-free'];
+    const togglePref = (o) => setDietaryPrefs((p) => p.includes(o) ? p.filter((x) => x !== o) : [...p, o]);
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        <TopBar title="Dietary preferences" onBack={() => go('profile')} />
+        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 40px' }}>
+          <div style={{ fontSize: 13, color: C.latte, marginBottom: 16, lineHeight: 1.5 }}>Pick what matters to you — matching bags get highlighted on their detail page.</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {OPTIONS.map((o) => {
+              const on = dietaryPrefs.includes(o);
+              return (
+                <button key={o} onClick={() => togglePref(o)} className="sk-press" style={{ padding: '16px 12px', borderRadius: 18, border: on ? `2px solid ${C.gold}` : `1px solid ${C.parchment}`, background: on ? 'rgba(189,155,63,0.08)' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
+                  {on ? <Check size={16} color="#9c7a1f" strokeWidth={3} /> : <span style={{ width: 16 }} />}
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: on ? C.cocoa : C.mocha }}>{o}</span>
+                </button>
+              );
+            })}
+          </div>
+          {dietaryPrefs.length > 0 && (
+            <div style={{ marginTop: 18, padding: '12px 14px', borderRadius: 14, background: 'rgba(62,124,83,0.1)', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Leaf size={15} color={C.sage} />
+              <span style={{ fontSize: 12, color: C.sage, fontWeight: 500 }}>{dietaryPrefs.length} preference{dietaryPrefs.length === 1 ? '' : 's'} saved — applied across the app.</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  /* ======================= HELP & SUPPORT ======================= */
+  const renderHelp = () => {
+    const FAQS = [
+      { q: 'What is in a surprise bag?', a: 'Each bag holds the merchant\u2019s unsold surplus from that day — the exact mix changes, but the value is always at least 2\u20133x what you pay.' },
+      { q: 'When do I pick up my bag?', a: 'Every bag shows a pickup window (usually 6\u20139 PM). Arrive within it, show your 4-digit code, and the staff hand over your bag.' },
+      { q: 'Can I cancel an order?', a: 'Yes — up to 1 hour before the pickup window opens, from your Orders tab. Refunds return to your payment method within 24 hours.' },
+      { q: 'What if my bag is disappointing?', a: 'Rate it after pickup. Merchants below 4.0 get coached; repeat offenders are removed. You can also contact us for a credit.' },
+    ];
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        <TopBar title="Help & support" onBack={() => go('profile')} />
+        <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 40px' }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+            <button onClick={() => setToast({ icon: '💬', text: 'Opening WhatsApp support…' })} className="sk-press" style={{ flex: 1, padding: 14, borderRadius: 16, border: 'none', cursor: 'pointer', background: '#25D366', color: '#fff', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+              <Phone size={15} /> WhatsApp
+            </button>
+            <button onClick={() => setToast({ icon: '✉️', text: 'Opening email…' })} className="sk-press" style={{ flex: 1, padding: 14, borderRadius: 16, border: `1px solid ${C.sand}`, cursor: 'pointer', background: '#fff', color: C.cocoa, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+              <Bell size={15} /> Email us
+            </button>
+          </div>
+          <div className="sk-display" style={{ fontSize: 16, fontWeight: 700, color: C.cocoa, marginBottom: 12, letterSpacing: '-0.01em' }}>Frequently asked</div>
+          {FAQS.map((f, i) => (
+            <details key={i} style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.parchment}`, marginBottom: 10, overflow: 'hidden' }}>
+              <summary style={{ padding: '14px 16px', fontSize: 13.5, fontWeight: 600, color: C.cocoa, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>{f.q}<ChevronRight size={16} color={C.sand} /></summary>
+              <div style={{ padding: '0 16px 14px', fontSize: 13, lineHeight: 1.55, color: C.mocha }}>{f.a}</div>
+            </details>
+          ))}
+          <button onClick={() => setToast({ icon: '🛟', text: 'Report sent — we reply within 24h' })} className="sk-press" style={{ width: '100%', marginTop: 8, padding: 14, borderRadius: 16, border: `1px solid ${C.parchment}`, background: '#fff', color: C.danger, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Report a problem</button>
+        </div>
+      </div>
+    );
+  };
+
   /* ======================= REFERRAL ======================= */
   const renderReferral = () => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
@@ -1917,6 +2102,47 @@ const SisaKuApp = () => {
             <Sparkles size={13} /> Plus {idr(mBagsSoldToday * 33000)} of food cost saved from the bin
           </div>
         </div>
+
+        {/* Earnings over time */}
+        {(() => {
+          const dayMs = 86400000;
+          const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+          const jan1 = new Date(t0.getFullYear(), 0, 1).getTime();
+          const lifetime = mSumSince(0);
+          const lifetimeBags = lifetime.bags + mBagsSoldToday;
+          const tierM = mTierFor(lifetimeBags);
+          const periods = [
+            { id: 'D',   label: 'Today',   gross: mRevenueToday, bags: mBagsSoldToday },
+            { id: 'W',   label: '7 days',  base: mSumSince(t0.getTime() - 6 * dayMs) },
+            { id: 'M',   label: '30 days', base: mSumSince(t0.getTime() - 29 * dayMs) },
+            { id: 'Q',   label: 'Quarter', base: mSumSince(t0.getTime() - 89 * dayMs) },
+            { id: 'YTD', label: 'YTD',     base: mSumSince(jan1) },
+            { id: '1Y',  label: '1 year',  base: mSumSince(t0.getTime() - 364 * dayMs) },
+            { id: 'ALL', label: 'Lifetime', base: lifetime },
+          ].map((p) => p.base ? { ...p, gross: p.base.gross + mRevenueToday, bags: p.base.bags + mBagsSoldToday } : p);
+          const sel = periods.find((p) => p.id === mEarnPeriod) || periods[1];
+          const net = Math.round(sel.gross * (1 - tierM.commission / 100));
+          return (
+            <div className="sk-fadeup" style={{ marginTop: 16, padding: 16, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div className="sk-display" style={{ fontSize: 15, fontWeight: 600, color: C.cocoa }}>Earnings</div>
+                <Pill bg="rgba(189,155,63,0.14)" color="#9c7a1f"><Award size={11} /> {tierM.name} · {tierM.commission}%</Pill>
+              </div>
+              <div className="sk-noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14 }}>
+                {periods.map((p) => {
+                  const on = p.id === sel.id;
+                  return <button key={p.id} onClick={() => setMEarnPeriod(p.id)} className="sk-press" style={{ flexShrink: 0, padding: '7px 12px', borderRadius: 999, border: 'none', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', background: on ? `linear-gradient(180deg, ${C.coffee}, ${C.cocoa})` : C.parchment, color: on ? C.cream : C.mocha }}>{p.label}</button>;
+                })}
+              </div>
+              <div className="sk-display" style={{ fontSize: 30, fontWeight: 700, color: C.cocoa, letterSpacing: '-0.02em', lineHeight: 1 }}>{idr(net)}</div>
+              <div style={{ fontSize: 12, color: C.latte, marginTop: 4 }}>Net payout · {sel.bags.toLocaleString('id-ID')} bags sold</div>
+              <div style={{ height: 1, background: C.parchment, margin: '12px 0' }} />
+              <Row label="Gross sales" value={idr(sel.gross)} />
+              <Row label={`Commission (${tierM.commission}%)`} value={'– ' + idr(sel.gross * tierM.commission / 100)} />
+              <Row label="Net to you" value={idr(net)} bold />
+            </div>
+          );
+        })()}
 
         {/* Quick actions */}
         <div className="sk-fadeup" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
@@ -2109,8 +2335,8 @@ const SisaKuApp = () => {
   // ---- Merchant Scan / Verify ----
   const renderMScan = () => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
-      <TopBar title="Verify pickup" onBack={() => { setScanResult(null); mGo('mDash'); }} />
-      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {mTopBar('Verify pickup', 'Confirm a customer code')}
+      <div className="sk-noscroll" style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 120px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Scanner visual */}
         <div style={{ width: 200, height: 200, borderRadius: 24, background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, position: 'relative', display: 'grid', placeItems: 'center', marginBottom: 24, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 20, border: `2px solid ${C.goldLight}`, borderRadius: 16, opacity: 0.5 }} />
@@ -2158,23 +2384,102 @@ const SisaKuApp = () => {
   const M_NAV = [
     { id: 'mDash', icon: HomeIcon, label: 'Home' },
     { id: 'mListings', icon: Tag, label: 'Listings' },
+    { id: 'mScan', icon: ShieldCheck, label: 'Verify', center: true },
     { id: 'mOrders', icon: ShoppingBag, label: 'Orders' },
-    { id: 'mScan', icon: ShieldCheck, label: 'Verify' },
+    { id: 'mProfile', icon: User, label: 'Profile' },
   ];
+
+  /* ---- Merchant Profile ---- */
+  const renderMProfile = () => {
+    const lifetime = mSumSince(0);
+    const lifetimeBags = lifetime.bags + mBagsSoldToday;
+    const tierM = mTierFor(lifetimeBags);
+    const joined = 'Jan 2025';
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        {mTopBar('Profile', 'Sourdough Project · Kemang')}
+        <div className="sk-noscroll" onScroll={mHandleScroll} style={{ flex: 1, overflowY: 'auto', padding: '14px 20px 120px' }}>
+          {/* Identity */}
+          <div className="sk-fadeup" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, background: '#fff', border: `1px solid ${C.parchment}` }}>
+            <div style={{ width: 60, height: 60, borderRadius: 999, background: `linear-gradient(135deg, ${C.caramel}, ${C.coffee})`, display: 'grid', placeItems: 'center', fontSize: 26 }}>🥖</div>
+            <div style={{ flex: 1 }}>
+              <div className="sk-display" style={{ fontSize: 19, fontWeight: 700, color: C.cocoa, letterSpacing: '-0.01em' }}>Sourdough Project</div>
+              <div style={{ fontSize: 12, color: C.latte, marginTop: 1 }}>Artisan Bakery · Kemang · since {joined}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 12, color: C.mocha }}><Star size={12} fill={C.gold} color={C.gold} /> 4.8 partner rating</div>
+            </div>
+          </div>
+
+          {/* Merchant progression */}
+          <div className="sk-fadeup" style={{ marginTop: 14, padding: 18, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: C.cocoa }}>{tierM.name}</div>
+                <div style={{ fontSize: 11.5, color: C.latte }}>{tierM.next ? `${tierM.toNext.toLocaleString('id-ID')} bags to ${tierM.next.name} (${tierM.next.commission}% commission)` : 'Highest partner tier 👑'}</div>
+              </div>
+              <Pill bg="rgba(189,155,63,0.16)" color="#9c7a1f">{tierM.commission}% fee</Pill>
+            </div>
+            <div style={{ height: 10, borderRadius: 999, background: C.parchment, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${tierM.pct}%`, borderRadius: 999, background: `linear-gradient(90deg, ${C.gold}, ${C.goldLight})`, animation: 'skBar 1s ease' }} />
+            </div>
+            <div className="sk-noscroll" style={{ display: 'flex', gap: 6, marginTop: 12, overflowX: 'auto' }}>
+              {MERCHANT_TIERS.map((t) => {
+                const unlocked = lifetimeBags >= t.min;
+                return <div key={t.level} style={{ flexShrink: 0, padding: '6px 10px', borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: unlocked ? 'rgba(189,155,63,0.15)' : C.parchment, color: unlocked ? '#9c7a1f' : C.latte }}>{unlocked ? '✓ ' : ''}{t.name} · {t.commission}%</div>;
+              })}
+            </div>
+            <div style={{ fontSize: 11.5, color: C.sage, marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}><Sparkles size={12} /> Sell more, keep more — your commission drops as you grow.</div>
+          </div>
+
+          {/* Lifetime stats */}
+          <div className="sk-fadeup" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
+            <ImpactCard icon={<ShoppingBag size={18} color={C.gold} />} value={lifetimeBags.toLocaleString('id-ID')} label="Bags rescued (lifetime)" tint="rgba(189,155,63,0.1)" />
+            <ImpactCard icon={<Leaf size={18} color={C.sage} />} value={(lifetimeBags * 1.3 / 1000).toFixed(1) + ' t'} label="CO₂ prevented" tint="rgba(62,124,83,0.1)" />
+          </div>
+
+          {/* Settings */}
+          <div className="sk-fadeup" style={{ marginTop: 14, borderRadius: 18, background: '#fff', border: `1px solid ${C.parchment}`, overflow: 'hidden' }}>
+            {[
+              { icon: <Store size={17} color={C.mocha} />, label: 'Store details & hours' },
+              { icon: <Wallet size={17} color={C.mocha} />, label: 'Payout account' },
+              { icon: <Bell size={17} color={C.mocha} />, label: 'Order notifications' },
+              { icon: <ShieldCheck size={17} color={C.mocha} />, label: 'Partner support' },
+            ].map((item, i, arr) => (
+              <button key={i} onClick={() => setToast({ icon: '⚙️', text: item.label })} className="sk-press" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 13, padding: '15px 18px', border: 'none', borderBottom: i < arr.length - 1 ? `1px solid ${C.parchment}` : 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
+                {item.icon}
+                <span style={{ flex: 1, fontSize: 14, color: C.cocoa, fontWeight: 500 }}>{item.label}</span>
+                <ChevronRight size={18} color={C.sand} />
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => { setRole('consumer'); setScreen('home'); }} className="sk-press" style={{ width: '100%', marginTop: 14, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.cocoa}, ${C.coffee})`, color: C.cream, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, boxShadow: '0 10px 24px rgba(28,23,18,0.22)' }}>
+            <Heart size={18} color={C.goldLight} /> Switch to shopper
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const renderMNav = () => (
     <div ref={mNavWrapRef} style={{ position: 'absolute', bottom: 22, left: 0, right: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}>
-      <div className="sk-glass-strong" style={{ display: 'flex', padding: 6, borderRadius: 999, width: mNavShrunk ? (M_NAV.length * 46 + 12) : (mNavFullW > 0 ? mNavFullW : '100%'), overflow: 'hidden', pointerEvents: 'auto', willChange: 'width', transition: 'width 0.5s cubic-bezier(0.32,0.72,0,1)' }}>
+      <div className="sk-glass-strong" style={{ display: 'flex', alignItems: 'center', padding: 6, borderRadius: 999, width: mNavShrunk ? (4 * 46 + 60 + 12) : (mNavFullW > 0 ? mNavFullW : '100%'), overflow: 'visible', pointerEvents: 'auto', willChange: 'width', transition: 'width 0.5s cubic-bezier(0.32,0.72,0,1)' }}>
         {M_NAV.map((item) => {
           const on = mScreen === item.id;
           const Icon = item.icon;
+          if (item.center) {
+            return (
+              <button key={item.id} onClick={() => { setScanResult(null); mGo(item.id); }} className="sk-press" style={{ flex: '0 0 auto', width: 56, height: 56, marginTop: -16, borderRadius: 999, border: '3px solid rgba(255,255,255,0.9)', background: `linear-gradient(160deg, ${C.goldLight}, ${C.gold})`, display: 'grid', placeItems: 'center', cursor: 'pointer', position: 'relative', boxShadow: '0 10px 24px rgba(189,155,63,0.45), inset 0 1px 0 rgba(255,255,255,0.5)' }}>
+                <Icon size={24} color={C.espresso} strokeWidth={2.2} />
+                {mPendingPickups > 0 && (
+                  <span style={{ position: 'absolute', top: -3, right: -3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{mPendingPickups}</span>
+                )}
+              </button>
+            );
+          }
           return (
             <button key={item.id} onClick={() => { setScanResult(null); mGo(item.id); }} className="sk-press" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 46, border: 'none', background: on ? 'rgba(189,155,63,0.16)' : 'transparent', borderRadius: 999, cursor: 'pointer', position: 'relative', transition: 'background 0.4s cubic-bezier(0.32,0.72,0,1)' }}>
               <Icon size={21} color={on ? C.caramel : C.latte} strokeWidth={on ? 2.4 : 1.9} />
               <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? C.cocoa : C.latte, letterSpacing: '-0.01em', maxHeight: mNavShrunk ? 0 : 13, opacity: mNavShrunk ? 0 : 1, overflow: 'hidden', whiteSpace: 'nowrap', willChange: 'max-height, opacity', transition: 'max-height 0.5s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease' }}>{item.label}</span>
-              {item.id === 'mScan' && mPendingPickups > 0 && (
-                <span style={{ position: 'absolute', top: 3, right: mNavShrunk ? 8 : '50%', marginRight: mNavShrunk ? 0 : -18, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: C.danger, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'right 0.5s cubic-bezier(0.32,0.72,0,1), margin-right 0.5s cubic-bezier(0.32,0.72,0,1)' }}>{mPendingPickups}</span>
-              )}
             </button>
           );
         })}
@@ -2189,6 +2494,7 @@ const SisaKuApp = () => {
       case 'mCreate': return renderMCreate();
       case 'mOrders': return renderMOrders();
       case 'mScan': return renderMScan();
+      case 'mProfile': return renderMProfile();
       default: return renderMDash();
     }
   };
@@ -2209,6 +2515,10 @@ const SisaKuApp = () => {
       case 'profile': return renderProfile();
       case 'notifications': return renderNotifications();
       case 'referral': return renderReferral();
+      case 'favorites': return renderFavorites();
+      case 'payments': return renderPayments();
+      case 'dietary': return renderDietary();
+      case 'help': return renderHelp();
       default: return renderHome();
     }
   };
@@ -2218,7 +2528,7 @@ const SisaKuApp = () => {
       {role === 'merchant' ? (
         <>
           <div key={mScreen} className="sk-fade" style={{ position: 'absolute', inset: 0 }}>{renderMerchantScreen()}</div>
-          {mScreen !== 'mCreate' && mScreen !== 'mScan' && renderMNav()}
+          {mScreen !== 'mCreate' && renderMNav()}
           {toast && renderToast()}
         </>
       ) : (
@@ -2256,7 +2566,7 @@ const SisaKuApp = () => {
           </div>
         </div>
 
-        <div style={{ position: 'relative', width: 393, height: 852, borderRadius: 56, padding: 11, background: 'linear-gradient(145deg, #5a5a5e 0%, #2c2c2f 40%, #1a1a1d 100%)', boxShadow: '0 50px 100px rgba(20,18,15,0.4), inset 0 1px 1px rgba(255,255,255,0.25), inset 0 0 0 1.5px rgba(255,255,255,0.08)' }}>
+        <div style={{ position: 'relative', width: 'auto', height: 'min(852px, calc(100vh - 48px))', aspectRatio: '393 / 852', borderRadius: 56, padding: 11, background: 'linear-gradient(145deg, #5a5a5e 0%, #2c2c2f 40%, #1a1a1d 100%)', boxShadow: '0 50px 100px rgba(20,18,15,0.4), inset 0 1px 1px rgba(255,255,255,0.25), inset 0 0 0 1.5px rgba(255,255,255,0.08)' }}>
           <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', width: 124, height: 36, borderRadius: 999, background: '#000', zIndex: 100 }} />
           <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 47, overflow: 'hidden', background: '#f7f6f3' }}>
             {phoneContent}
@@ -2265,7 +2575,7 @@ const SisaKuApp = () => {
       </div>
 
       {/* Mobile: true fullscreen, fits every phone edge-to-edge */}
-      <div className="md:hidden sk-root sk-safe-bottom" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
+      <div className="md:hidden sk-root" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), #f7f6f3' }}>
         {phoneContent}
       </div>
     </>
