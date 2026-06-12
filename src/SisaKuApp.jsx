@@ -65,25 +65,25 @@ const GLOBAL_CSS = `
 
   /* ---- Liquid Glass materials ---- */
   .sk-glass {
-    background: rgba(255,255,255,0.55);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.65);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 30px rgba(28,23,18,0.07);
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(36px) saturate(190%);
+    -webkit-backdrop-filter: blur(36px) saturate(190%);
+    border: 1px solid rgba(255,255,255,0.85);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 10px 30px rgba(28,23,18,0.08);
   }
   .sk-glass-strong {
-    background: rgba(255,255,255,0.74);
-    backdrop-filter: blur(34px) saturate(180%);
-    -webkit-backdrop-filter: blur(34px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.8);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 48px rgba(28,23,18,0.13);
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(44px) saturate(200%);
+    -webkit-backdrop-filter: blur(44px) saturate(200%);
+    border: 1px solid rgba(255,255,255,0.95);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 18px 48px rgba(28,23,18,0.16);
   }
   .sk-glass-dark {
-    background: rgba(22,18,15,0.6);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid rgba(255,255,255,0.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 14px 36px rgba(0,0,0,0.35);
+    background: rgba(20,16,13,0.78);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 14px 36px rgba(0,0,0,0.4);
   }
 
   .sk-gold-text {
@@ -2538,25 +2538,17 @@ const SisaKuApp = () => {
     }
   };
 
-  // Soft gradient that fills the screen bottom behind the floating dock,
-  // so there is never a bare strip ("band") below the content / pill.
-  const bottomScrim = (
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, zIndex: 25, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(247,246,243,0) 0%, rgba(247,246,243,0.85) 55%, #f7f6f3 100%)' }} />
-  );
-
   const phoneContent = (
     <div className="sk-root" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'radial-gradient(820px 540px at 88% -8%, rgba(232,204,116,0.18), transparent 60%), radial-gradient(640px 480px at -12% 28%, rgba(139,101,72,0.10), transparent 55%), radial-gradient(700px 520px at 50% 115%, rgba(189,155,63,0.08), transparent 55%), #f7f6f3' }}>
       {role === 'merchant' ? (
         <>
           <div key={mScreen} className="sk-fade" style={{ position: 'absolute', inset: 0 }}>{renderMerchantScreen()}</div>
-          {mScreen !== 'mCreate' && bottomScrim}
           {mScreen !== 'mCreate' && renderMNav()}
           {toast && renderToast()}
         </>
       ) : (
         <>
           <div key={screen} className="sk-fade" style={{ position: 'absolute', inset: 0 }}>{renderScreen()}</div>
-          {['home', 'map', 'orders', 'profile'].includes(screen) && bottomScrim}
           {renderBottomNav()}
           {showFilters && renderFilters()}
           {activeOrderDetail && renderOrderDetail()}
